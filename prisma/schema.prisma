@@ -4,25 +4,37 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")  // Remove the backslash before _
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  email String 
-  hash String
-
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  email     String    @unique
+  hash      String
   firstName String?
-  lastName String?
+  lastName  String?
+  products  Product[] // Remove backslash before []
+  payments  Payment[] // Remove backslash before []
+  isPremium Boolean   @default(false)
 }
 
-model Bookmark {
-  id Int @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updateedAt DateTime @default(now())
-
-  title String
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
   description String?
+  imageUrl    String
+  price       Float
+  createdAt   DateTime @default(now())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id]) // Remove backslashes
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  currency  String
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id]) // Remove backslashes
 }
