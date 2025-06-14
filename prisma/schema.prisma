@@ -4,37 +4,93 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")  // Remove the backslash before _
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  email     String    @unique
-  hash      String
-  firstName String?
-  lastName  String?
-  products  Product[] // Remove backslash before []
-  payments  Payment[] // Remove backslash before []
-  isPremium Boolean   @default(false)
+  id             Int         @id @default(autoincrement())
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  email          String      @unique
+  passwordHash   String
+  firstName      String?
+  lastName       String?
+
+  // Premium system
+  premiumTier    PremiumTier @default(FREE)
+  availableSlots Int         @default(5)
+  usedSlots      Int         @default(0)
+  premiumExpiry  DateTime?
+
+  // Role & status
+  role           Role        @default(USER)
+  isDeleted      Boolean     @default(false)
+
+  // Relationships
+  products       Product[]
+  payments       Payment[]
+
+  @@index([createdAt])
+  @@index([premiumTier])
+  @@index([role])
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String?
   imageUrl    String
   price       Float
-  createdAt   DateTime @default(now())
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
   userId      Int
-  user        User     @relation(fields: [userId], references: [id]) // Remove backslashes
+  user        User      @relation(fields: [userId], references: [id])
+  images      ProductImage[]
+
+  @@index([userId])
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Payment {
-  id        Int      @id @default(autoincrement())
-  amount    Float
-  currency  String
-  createdAt DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id]) // Remove backslashes
+  id             Int         @id @default(autoincrement())
+  amount         Float
+  currency       String
+  status         String      @default("SUCCESS") // Could be SUCCESS, FAILED, PENDING
+  transactionId  String?     // From payment gateway
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Premium purchase details
+  premiumTier    PremiumTier
+  slotsGranted   Int
+  validityMonths Int
+
+  // Relationships
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum PremiumTier {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
 }
