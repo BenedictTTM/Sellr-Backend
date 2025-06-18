@@ -29,6 +29,7 @@ CREATE TABLE "Product" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "imageUrl" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
