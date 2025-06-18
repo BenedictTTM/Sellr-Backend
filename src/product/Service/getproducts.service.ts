@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service'; // Adjust path as necessary
-import { ProductDto } from '../dto/product.dto'; // If needed for create/update in future
+import { PrismaService } from '../../prisma/prisma.service'; // Adjust path if needed
+import { ProductDto } from '../dto/product.dto'; // Useful for create/update, though not used here
 
 @Injectable()
-export class ProductsService {
+export class GetProductsService {
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -93,7 +93,11 @@ export class ProductsService {
 
       return products;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Unknown error occurred during product search');
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unknown error occurred during product search',
+      );
     }
   }
 
@@ -127,7 +131,46 @@ export class ProductsService {
 
       return products;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Unknown error occurred during category filtering');
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unknown error occurred during category filtering',
+      );
+    }
+  }
+
+  /**
+   * Get all active products posted by a specific user.
+   */
+  async getProductsByUserId(userId: number) {
+    try {
+      const products = await this.prisma.product.findMany({
+        where: {
+          userId: userId,
+          isActive: true, // Only fetch active products
+        },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          createdAt: true,
+          category: true,
+          isActive: true,
+          description: true,
+          imageUrl: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return products;
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Unknown error occurred while fetching products by user ID',
+      );
     }
   }
 }
