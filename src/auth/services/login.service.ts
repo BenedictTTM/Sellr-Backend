@@ -39,6 +39,7 @@ export class LoginService {
         throw new ForbiddenException('Invalid email or password');
       }
 
+       
       this.logger.log(`User logged in successfully: ${user.id}`);
 
       // Return user without sensitive information
