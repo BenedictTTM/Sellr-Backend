@@ -11,16 +11,16 @@ export class ProductService {
     private readonly getProductsService: GetProductsService
   ) {}
 
-  async createProduct(productData: ProductDto) {
-    return this.crudService.createProduct(productData);
+  async createProduct(productData: ProductDto , userId: number) {
+    return this.crudService.createProduct(productData , userId);
   }
 
-    async updateProduct(productId: number, productData: ProductDto) {
-        return this.crudService.updateProduct(productId, productData);
+    async updateProduct(productId: number, productData: ProductDto , userId:number) {
+        return this.crudService.updateProduct(productId, productData , userId);
     }
 
-    async deleteProduct(productId: number) {
-        return this.crudService.deleteProduct(productId);
+    async deleteProduct(productId: number , userId: number) {
+        return this.crudService.deleteProduct(productId , userId);
     }
 
     async getAllProducts() {
