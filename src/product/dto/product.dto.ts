@@ -33,5 +33,5 @@ export class ProductDto {
 
   @IsArray()
   @IsOptional()
-  tags?: string[] = []; // Default empty array
+  tags?: string[] = []; //w Default empty array
 }
