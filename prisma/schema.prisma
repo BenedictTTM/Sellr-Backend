@@ -7,82 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             Int         @id @default(autoincrement())
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  email          String      @unique
-  passwordHash   String
-  firstName      String?
-  lastName       String?
-
-  // Premium system
-  premiumTier    PremiumTier @default(FREE)
-  availableSlots Int         @default(5)
-  usedSlots      Int         @default(0)
-  premiumExpiry  DateTime?
-
-  // Role & status
-  role           Role        @default(USER)
-  isDeleted      Boolean     @default(false)
-
-  // Relationships
-  products       Product[]
-  payments       Payment[]
-
-  @@index([createdAt])
-  @@index([premiumTier])
-  @@index([role])
-}
-
-model Product {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  imageUrl    String
-  category    String
-  price       Float
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Relationships
-  userId      Int
-  user        User      @relation(fields: [userId], references: [id])
-  images      ProductImage[]
-
-  @@index([userId])
-}
-
-model ProductImage {
-  id        Int     @id @default(autoincrement())
-  url       String
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-}
-
-model Payment {
-  id             Int         @id @default(autoincrement())
-  amount         Float
-  currency       String
-  status         String      @default("SUCCESS") // Could be SUCCESS, FAILED, PENDING
-  transactionId  String?     // From payment gateway
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  // Premium purchase details
-  premiumTier    PremiumTier
-  slotsGranted   Int
-  validityMonths Int
-
-  // Relationships
-  userId         Int
-  user           User        @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([status])
-}
-
 enum PremiumTier {
   FREE
   BASIC
@@ -94,4 +18,152 @@ enum Role {
   USER
   ADMIN
   MODERATOR
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  email          String    @unique
+  passwordHash   String
+  username       String    @unique
+  phone          String?   @unique
+  schoolId       String?   // e.g., student ID
+  schoolIdPic    String?
+  profilePic     String?
+
+  firstName      String?
+  lastName       String?
+
+  // Premium system
+  premiumTier    PremiumTier @default(FREE)
+  availableSlots Int         @default(5)
+  usedSlots      Int         @default(0)
+  premiumExpiry  DateTime?
+
+  // Role & status
+  role           Role      @default(USER)
+  isDeleted      Boolean   @default(false)
+
+  // Ratings
+  rating         Float     @default(0.0)
+  totalRatings   Int       @default(0)
+
+  // Relationships
+  products       Product[]
+  payments       Payment[]
+  sentMessages   Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  reviews        Review[]  @relation("ReviewerReviews")
+  reports        Report[]
+  
+  @@index([createdAt])
+  @@index([premiumTier])
+  @@index([role])
+}
+
+model Product {
+  id           Int             @id @default(autoincrement())
+  title        String
+  description  String?
+  imageUrl     String
+  category     String
+  price        Float
+  stock        Int
+  isActive     Boolean         @default(true)
+  isSold       Boolean         @default(false)
+  condition    String          // e.g., "new", "used"
+  tags         String[]        // e.g., ["books", "electronics"]
+  views        Int             @default(0)
+  locationLat  Float?
+  locationLng  Float?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  // Relationships
+  userId       Int
+  user         User            @relation(fields: [userId], references: [id])
+  images       ProductImage[]
+  delivery     Delivery?
+  reviews      Review[]
+  reports      Report[]
+
+  @@index([userId])
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id             Int         @id @default(autoincrement())
+  amount         Float
+  currency       String
+  status         String      @default("SUCCESS") // SUCCESS, FAILED, PENDING
+  transactionId  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  premiumTier    PremiumTier
+  slotsGranted   Int
+  validityMonths Int
+  paymentType    String      @default("PREMIUM") // For future use
+
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  sentAt     DateTime @default(now())
+
+  senderId   Int
+  receiverId Int
+
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  rating      Int      // 1 to 5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  reviewerId  Int
+  productId   Int
+
+  reviewer    User     @relation("ReviewerReviews", fields: [reviewerId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Delivery {
+  id         Int     @id @default(autoincrement())
+  method     String  // e.g., "pickup", "delivery"
+  location   String?
+  fee        Float?
+
+  productId  Int      @unique
+  product    Product @relation(fields: [productId], references: [id])
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  reason     String
+  createdAt  DateTime @default(now())
+
+  userId     Int
+  productId  Int?
+
+  user       User     @relation(fields: [userId], references: [id])
+  product    Product? @relation(fields: [productId], references: [id])
 }

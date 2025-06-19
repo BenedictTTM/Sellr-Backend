@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe , Request } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ProductDto } from './dto/product.dto';
 
@@ -7,8 +7,9 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  async createProduct(@Body() productData: ProductDto) {
-    return await this.productService.createProduct(productData);
+  async createProduct(@Body() productData: ProductDto, @Request() req) {
+    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    return this.productService.createProduct(productData, userId);
   }
 
   @Get()
@@ -38,14 +39,17 @@ export class ProductController {
 
   @Put(':id')
   async updateProduct(
-    @Param('id', ParseIntPipe) productId: number,
-    @Body() productData: ProductDto
+    @Param('id') id: string, 
+    @Body() productData: ProductDto, 
+    @Request() req
   ) {
-    return await this.productService.updateProduct(productId, productData);
+    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    return this.productService.updateProduct(+id, productData, userId);
   }
 
   @Delete(':id')
-  async deleteProduct(@Param('id', ParseIntPipe) productId: number) {
-    return await this.productService.deleteProduct(productId);
+  async deleteProduct(@Param('id') id: string, @Request() req) {
+    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    return this.productService.deleteProduct(+id, userId);
   }
 }

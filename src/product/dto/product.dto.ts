@@ -1,4 +1,4 @@
-import { IsString , IsNotEmpty  } from "class-validator";
+import { IsString , IsNotEmpty, IsOptional , IsNumber , IsArray } from "class-validator";
 
 export class ProductDto {
     @IsString({ message: 'Title must be a string' })
@@ -20,5 +20,18 @@ export class ProductDto {
     category: string;
 
     @IsNotEmpty({ message: 'User ID is required' })
-    userId: number;
+    @IsOptional()
+    userId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  locationLat?: number = 0.0; // Default value
+
+  @IsNumber()
+  @IsOptional()
+  locationLng?: number = 0.0; // Default value
+
+  @IsArray()
+  @IsOptional()
+  tags?: string[] = []; // Default empty array
 }

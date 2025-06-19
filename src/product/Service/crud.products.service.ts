@@ -1,68 +1,83 @@
-import { PrismaService } from "../../prisma/prisma.service";
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ProductDto } from "../dto/product.dto";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { ProductDto } from '../dto/product.dto';
 
 @Injectable()
 export class CrudService {
-    constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-    async createProduct(productData: ProductDto) {
-        try {
-            const newProduct = await this.prisma.product.create({
-                data: {
-                    ...productData,
-                    isActive: true, // Default to active
-                },
-            });
-            return newProduct;
-        } catch (error) {
-            throw new Error(`Failed to create product: ${error.message}`);
-        }
+  async createProduct(productData: ProductDto, userId: number ) {
+    try {
+    const {userId: _, ...productDataWithoutUser} = productData; // Exclude userId from productData
+      const newProduct = await this.prisma.product.create({
+        data: {
+          ...productDataWithoutUser,
+          isActive: true,
+          isSold: false,
+          condition:'',
+        tags: [], // Add empty array for tags
+        locationLat: 0.0, // Add default value
+        locationLng: 0.0, // Add default value
+          stock: 1,
+          views: 0,
+          user: { connect: { id: userId } },
+        },
+      });
+      return { success: true, data: newProduct };
+    } catch (error) {
+     
+        console.error('Database error:', error);
+        throw new InternalServerErrorException(`Failed to create product: ${error.message}`);
+     
     }
+  }
 
-    async updateProduct(productId: number, productData: ProductDto) {
-        try {
-            const existingProduct = await this.prisma.product.findUnique({
-                where: { id: productId },
-            });
+  async updateProduct(productId: number, productData: ProductDto, userId: number) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
 
-            if (!existingProduct) {
-                throw new NotFoundException(`Product with ID ${productId} not found`);
-            }
-
-            const updatedProduct = await this.prisma.product.update({
-                where: { id: productId },
-                data: {
-                    ...productData,
-                },
-            });
-
-            return updatedProduct;
-        } catch (error) {
-            throw new Error(`Failed to update product: ${error.message}`);
-        }
+    if (!product) throw new NotFoundException(`Product with ID ${productId} not found`);
+    if (product.userId !== userId)
+      throw new ForbiddenException('You are not allowed to update this product');
+    try {
+      const updated = await this.prisma.product.update({
+        where: { id: productId },
+        data: {
+          ...productData,
+        },
+      });
+      return { success: true, data: updated };
+    } catch (error) {
+       console.error('Database error:', error);
+      throw new InternalServerErrorException(`Failed to create product: ${error.message}`);
     }
+  }
 
-    async deleteProduct(productId: number) {
-        try {
-            const existingProduct = await this.prisma.product.findUnique({
-                where: { id: productId },
-            });
+  async deleteProduct(productId: number, userId: number ) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
 
-            if (!existingProduct) {
-                throw new NotFoundException(`Product with ID ${productId} not found`);
-            }
+    if (!product) throw new NotFoundException(`Product with ID ${productId} not found`);
+    if (product.userId !== userId)
+      throw new ForbiddenException('You are not allowed to delete this product');
 
-            const deletedProduct = await this.prisma.product.update({
-                where: { id: productId },
-                data: {
-                    isActive: false, // Soft delete
-                },
-            });
-
-            return deletedProduct;
-        } catch (error) {
-            throw new Error(`Failed to delete product: ${error.message}`);
-        }
+    try {
+      const softDeleted = await this.prisma.product.update({
+        where: { id: productId },
+        data: {
+          isActive: false,
+        },
+      });
+      return { success: true, data: softDeleted };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to delete product');
     }
+  }
 }

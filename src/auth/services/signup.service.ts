@@ -30,6 +30,7 @@ export class SignupService {
         data: {
           email: dto.email,
           passwordHash,
+          username: dto.email,
           firstName: dto.firstName,
           lastName: dto.lastName,
           premiumTier: 'FREE',
