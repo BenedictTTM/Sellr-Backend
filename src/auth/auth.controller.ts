@@ -3,6 +3,7 @@ import { AuthService } from './auth.service'; // Ensure this path is correct
 import { Body } from '@nestjs/common';
 import { SignUpDto } from './dto/signUp.dto'; // Ensure this path is correct
 import { LoginDto } from './dto/login.dto';
+
 // Import necessary decorators and services from NestJS
 
 @Controller('auth') // Base route: /auth
