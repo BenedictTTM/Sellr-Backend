@@ -1,13 +1,17 @@
 import { Injectable, ConflictException, InternalServerErrorException, Logger } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { SignUpDto } from "../dto/signUp.dto";
+import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
 
 @Injectable()
 export class SignupService {
   private readonly logger = new Logger(SignupService.name);
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService,
+             private jwtService: JwtService
+  ) {}
+   
 
   async signup(dto: SignUpDto) {
     try {
@@ -53,6 +57,14 @@ export class SignupService {
 
       this.logger.log(`User created successfully with ID: ${user.id}`);
       
+         // Generate JWT token with minimal data
+      const token = this.jwtService.sign({
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      });
+
+      this.logger.log(`User created successfully with ID: ${user.id}`);
       return {
         success: true,
         message: 'Account created successfully',

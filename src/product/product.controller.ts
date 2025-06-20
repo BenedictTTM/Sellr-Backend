@@ -2,13 +2,16 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe , 
 import { ProductService } from './product.service';
 import { ProductDto } from './dto/product.dto';
 
+
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
+  
 
   @Post()
   async createProduct(@Body() productData: ProductDto, @Request() req) {
-    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    const userId = req.user?.id; // This will now have the actual user ID
+    console.log('User ID from token:', userId); // Debug log
     return this.productService.createProduct(productData, userId);
   }
 

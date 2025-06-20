@@ -3,18 +3,20 @@ import { Injectable, ForbiddenException, Logger } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { LoginDto } from "../dto/login.dto";
 import * as argon from 'argon2';
+import { JwtService } from "@nestjs/jwt"; // Import JwtService for JWT functionality
 
 @Injectable()
 export class LoginService {
   private readonly logger = new Logger(LoginService.name);
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService,
+              private readonly jwtService: JwtService  // Import JwtService for JWT functionality
+  ) {}
 
   async login(dto: LoginDto) {
     try {
-      this.logger.log(`Login attempt for email: ${dto.email}`);
 
-      // Find user by email
+            // Find user by email
       const user = await this.prismaService.user.findUnique({
         where: { email: dto.email },
       });
@@ -24,6 +26,19 @@ export class LoginService {
         this.logger.warn(`Login failed: User not found for email ${dto.email}`);
         throw new ForbiddenException('Invalid email or password');
       }
+
+      
+            // Generate JWT token
+      const payload = { 
+        role: user.role, 
+        email: user.email,
+        id: user.id // Make sure to include id for your product creation
+      };
+      
+     const access_token = await this.jwtService.signAsync(payload)
+
+      this.logger.log(`Login attempt for email: ${dto.email}`);
+
 
       // Check if account is deleted
       if (user.isDeleted) {
@@ -49,6 +64,7 @@ export class LoginService {
         success: true,
         message: 'Login successful',
         user: safeUser,
+        access_token, 
         remainingSlots: safeUser.availableSlots - safeUser.usedSlots
       };
 
