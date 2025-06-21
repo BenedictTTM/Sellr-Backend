@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe , Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe , Request , UseGuards } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ProductDto } from './dto/product.dto';
+import { AuthGuard } from '../guards/auth.guard'; // Adjust the import path as necessary
 
 
 @Controller('products')
@@ -9,6 +10,7 @@ export class ProductController {
   
 
   @Post()
+  @UseGuards(AuthGuard) // Ensure that the user is authenticated
   async createProduct(@Body() productData: ProductDto, @Request() req) {
     const userId = req.user?.id; // This will now have the actual user ID
     console.log('User ID from token:', userId); // Debug log
