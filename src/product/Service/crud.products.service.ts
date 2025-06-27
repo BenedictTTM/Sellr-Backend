@@ -3,39 +3,58 @@ import {
   NotFoundException,
   ForbiddenException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductDto } from '../dto/product.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class CrudService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private cloudinaryService: CloudinaryService) {}
 
-  async createProduct(productData: ProductDto, userId: number ) {
+  async uploadImageToCloudinary(file: Express.Multer.File) {
+    return await this.cloudinaryService.uploadImage(file).catch(() => {
+      throw new BadRequestException('Invalid file type.');
+    });
+  }
+
+  async createProduct(productData: ProductDto, userId: number, file?: Express.Multer.File) {
     try {
-    const {userId: _, ...productDataWithoutUser} = productData; // Exclude userId from productData
+      const { userId: _, ...productDataWithoutUser } = productData;
+      
+      let imageUrl = '';
+      
+      // Upload image to Cloudinary if file is provided
+      if (file) {
+        const uploadResult = await this.uploadImageToCloudinary(file);
+        imageUrl = uploadResult.secure_url;
+      }
+
       const newProduct = await this.prisma.product.create({
         data: {
           ...productDataWithoutUser,
+          imageUrl, // Add the uploaded image URL
           isActive: true,
           isSold: false,
-          condition:'',
-        tags: [], // Add empty array for tags
-        locationLat: 0.0, // Add default value
-        locationLng: 0.0, // Add default value
+          condition: '',
+          tags: [],
+          locationLat: 0.0,
+          locationLng: 0.0,
           stock: 1,
           views: 0,
           user: { connect: { id: userId } },
         },
       });
+      
       return { success: true, data: newProduct };
     } catch (error) {
-     
-        console.error('Database error:', error);
-        throw new InternalServerErrorException(`Failed to create product: ${error.message}`);
-     
+      console.error('Database error:', error);
+      throw new InternalServerErrorException(`Failed to create product: ${error.message}`);
     }
   }
+
+  // ...existing updateProduct and deleteProduct methods...
 
   async updateProduct(productId: number, productData: ProductDto, userId: number) {
     const product = await this.prisma.product.findUnique({
