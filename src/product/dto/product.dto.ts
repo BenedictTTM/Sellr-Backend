@@ -1,4 +1,5 @@
 import { IsString , IsNotEmpty, IsOptional , IsNumber , IsArray } from "class-validator";
+import { Transform } from 'class-transformer';
 
 export class ProductDto {
     @IsString({ message: 'Title must be a string' })
@@ -10,9 +11,11 @@ export class ProductDto {
     description: string;
 
     @IsString({ message: 'Image URL must be a string' })
-    @IsNotEmpty({ message: 'Image URL is required' })
-    imageUrl: string;
+    @IsOptional()
+    imageUrl?: string;
 
+     
+    @Transform(({ value }) => parseFloat(value)) // Transform string to number
     @IsNotEmpty({ message: 'Price is required' })
     price: number;
 

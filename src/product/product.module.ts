@@ -7,9 +7,10 @@ import { PrismaModule } from '../prisma/prisma.module'; // Adjust path as needed
 import { AuthGuard } from '../guards/auth.guard'; // Adjust path as needed
 import { RolesGuard } from '../guards/roles.guard'; // Adjust path as needed
 import { AuthModule } from 'src/auth/auth.module'; // Adjust the import path as necessary
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module'; // Import CloudinaryModule if needed
 
 @Module({
-  imports: [PrismaModule , AuthModule], // Import PrismaModule if your services use Prisma
+  imports: [PrismaModule , AuthModule , CloudinaryModule], // Import PrismaModule if your services use Prisma
   controllers: [ProductController],
   providers: [
     ProductService,
