@@ -31,21 +31,31 @@ export class CrudService {
         imageUrl = uploadResult.secure_url;
       }
 
-      const newProduct = await this.prisma.product.create({
-        data: {
-          ...productDataWithoutUser,
-          imageUrl, // Add the uploaded image URL
-          isActive: true,
-          isSold: false,
-          condition: '',
-          tags: [],
-          locationLat: 0.0,
-          locationLng: 0.0,
-          stock: 1,
-          views: 0,
-          user: { connect: { id: userId } },
-        },
-      });
+        console.log('📋 Product data before saving:', {
+      ...productDataWithoutUser,
+      price: productData.price,
+      imageUrl,
+      userId
+    });
+
+ const newProduct = await this.prisma.product.create({
+      data: {
+        title: productDataWithoutUser.title,
+        description: productDataWithoutUser.description,
+        price: productDataWithoutUser.price, // Make sure price is included
+        category: productDataWithoutUser.category,
+        imageUrl,
+        isActive: true,
+        isSold: false,
+        condition: '',
+        tags: productDataWithoutUser.tags || [],
+        locationLat: productDataWithoutUser.locationLat || 0.0,
+        locationLng: productDataWithoutUser.locationLng || 0.0,
+        stock: 1,
+        views: 0,
+        user: { connect: { id: userId } },
+      },
+    });
       
       return { success: true, data: newProduct };
     } catch (error) {

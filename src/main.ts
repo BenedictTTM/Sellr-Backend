@@ -14,10 +14,19 @@ async function bootstrap() {
   // Enable global validation pipes
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,           // Remove properties that don't have decorators
-    forbidNonWhitelisted: true, // Throw error if non-whitelisted properties are present
+    forbidNonWhitelisted: false, // CHANGE: Set to false to allow form-data fields
     transform: true,           // Transform payloads to DTO instances
     disableErrorMessages: false, // Show detailed error messages
     validateCustomDecorators: true, // Enable custom validation decorators
+    transformOptions: {
+      enableImplicitConversion: true, // CHANGE: This helps convert strings to numbers
+    },
+    // ADD: New option to handle form-data better
+    skipMissingProperties: false,
+    // ADD: New option to ensure all required fields are validated
+    skipNullProperties: false,
+    // ADD: New option to handle undefined values
+    skipUndefinedProperties: false,
   }));
   
   const port = process.env.PORT || 3001;
