@@ -80,6 +80,11 @@ model Product {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
+  // Add cached rating fields
+  averageRating    Float        @default(0.0)
+  totalReviews     Int          @default(0)
+  lastRatingUpdate DateTime?
+
   // Relationships
   userId       Int
   user         User            @relation(fields: [userId], references: [id])
@@ -89,6 +94,7 @@ model Product {
   reports      Report[]
 
   @@index([userId])
+  @@index([averageRating])
 }
 
 model ProductImage {

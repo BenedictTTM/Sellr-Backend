@@ -19,6 +19,20 @@ export class ProductDto {
     @IsNotEmpty({ message: 'Price is required' })
     price: number;
 
+    @Transform(({ value }) => parseFloat(value)) // Transform string to number
+    @IsOptional()
+    @IsNumber({}, { message: 'Rating must be a number' })
+    rating?: number;
+
+    @Transform(({ value }) => parseFloat(value)) // Transform string to number
+    @IsOptional()
+    @IsNumber({}, { message: 'Views must be a number' })
+    views?: number;
+     
+    @Transform(({ value }) => parseFloat(value)) // Transform string to number
+    @IsNotEmpty({ message: 'discount is required' })
+    discount?: number;
+
     @IsString({ message: 'Category must be a string' })
     category: string;
 
