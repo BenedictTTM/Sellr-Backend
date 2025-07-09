@@ -19,22 +19,25 @@ export class CrudService {
     });
   }
 
-  async createProduct(productData: ProductDto, userId: number, file?: Express.Multer.File) {
+  async createProduct(productData: ProductDto, userId: number, files?: Express.Multer.File[]) {
     try {
       const { userId: _, ...productDataWithoutUser } = productData;
       
-      let imageUrl = '';
+      let imageUrls: string[] = [];
       
-      // Upload image to Cloudinary if file is provided
-      if (file) {
-        const uploadResult = await this.uploadImageToCloudinary(file);
-        imageUrl = uploadResult.secure_url;
-      }
+    // Upload images to Cloudinary if files are provided
+    if (files && files.length > 0) {
+      const uploadResults = await Promise.all(
+        files.map(file => this.uploadImageToCloudinary(file))
+      );
+      imageUrls = uploadResults.map(result => result.secure_url);
+    }
 
         console.log('📋 Product data before saving:', {
       ...productDataWithoutUser,
-      price: productData.price,
-      imageUrl,
+      originalPrice: productDataWithoutUser.originalPrice,
+      discountedPrice: productDataWithoutUser.discountedPrice,      
+      imageUrls,
       userId
     });
 
@@ -42,9 +45,10 @@ export class CrudService {
       data: {
         title: productDataWithoutUser.title,
         description: productDataWithoutUser.description,
-        price: productDataWithoutUser.price, // Make sure price is included
+        originalPrice: productDataWithoutUser.originalPrice, // <-- add this
+        discountedPrice: productDataWithoutUser.discountedPrice, // <-- add this
         category: productDataWithoutUser.category,
-        imageUrl,
+        imageUrl: imageUrls ,// Default to empty string if no images
         isActive: true,
         isSold: false,
         condition: '',

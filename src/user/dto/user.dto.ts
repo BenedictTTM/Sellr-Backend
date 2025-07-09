@@ -1,14 +1,14 @@
-import {IsEmail , IsNotEmpty , IsString , IsOptional , IsNumber} from "class-validator";
+import {IsEmail  , IsString , IsOptional , IsNumber} from "class-validator";
 
 export class UserDto {
     @IsEmail({},{message: 'Please provide a valid email address'})
-    @IsNotEmpty({message: 'Email is required'})
+    @IsOptional()
     @IsString({message: 'Email must be a string'})
     email: string;
 
-     @IsNotEmpty()
+     @IsOptional()
     @IsString()
-    name: string;
+    name?: string;
 
 
     @IsOptional()
@@ -18,9 +18,12 @@ export class UserDto {
     @IsOptional()
     @IsString()
     products?: string; // Optional product field
-    
-   
 
+    @IsOptional()
+    @IsString()
+    role?: string; // <-- Add this line
+
+    
 }
 
 

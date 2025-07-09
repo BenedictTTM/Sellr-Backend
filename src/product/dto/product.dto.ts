@@ -12,12 +12,16 @@ export class ProductDto {
 
     @IsString({ message: 'Image URL must be a string' })
     @IsOptional()
-    imageUrl?: string;
+    imageUrl?: string[];
 
      
-    @Transform(({ value }) => parseFloat(value)) // Transform string to number
-    @IsNotEmpty({ message: 'Price is required' })
-    price: number;
+    @IsNumber()
+    @IsNotEmpty({ message: 'Original price is required' })
+    originalPrice: number;
+
+    @IsNumber()
+    @IsNotEmpty({ message: 'Discounted price is required' })
+    discountedPrice: number;
 
     @Transform(({ value }) => parseFloat(value)) // Transform string to number
     @IsOptional()
@@ -28,10 +32,6 @@ export class ProductDto {
     @IsOptional()
     @IsNumber({}, { message: 'Views must be a number' })
     views?: number;
-     
-    @Transform(({ value }) => parseFloat(value)) // Transform string to number
-    @IsNotEmpty({ message: 'discount is required' })
-    discount?: number;
 
     @IsString({ message: 'Category must be a string' })
     category: string;

@@ -66,9 +66,10 @@ model Product {
   id           Int             @id @default(autoincrement())
   title        String
   description  String?
-  imageUrl     String
+  imageUrl     String[]
   category     String
-  price        Float
+originalPrice   Float
+discountedPrice Float
   stock        Int
   isActive     Boolean         @default(true)
   isSold       Boolean         @default(false)
