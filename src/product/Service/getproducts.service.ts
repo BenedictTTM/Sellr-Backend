@@ -15,7 +15,8 @@ export class GetProductsService {
         description: true,
         imageUrl: true,
         category: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         stock: true,
         condition: true,
         tags: true,
@@ -99,7 +100,8 @@ export class GetProductsService {
         description: true,
         imageUrl: true,
         category: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         stock: true,
         condition: true,
         tags: true,
@@ -208,7 +210,8 @@ export class GetProductsService {
         description: true,
         imageUrl: true,
         category: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         condition: true,
         tags: true,
         views: true,
@@ -266,7 +269,8 @@ export class GetProductsService {
         description: true,
         imageUrl: true,
         category: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         condition: true,
         tags: true,
         views: true,
@@ -322,7 +326,8 @@ export class GetProductsService {
         description: true,
         imageUrl: true,
         category: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         stock: true,
         condition: true,
         tags: true,
@@ -372,7 +377,8 @@ export class GetProductsService {
         id: true,
         title: true,
         imageUrl: true,
-        price: true,
+         originalPrice: true,
+        discountedPrice: true,
         condition: true,
         createdAt: true,
         user: {
@@ -401,7 +407,7 @@ export class GetProductsService {
   async getProductsByPriceRange(minPrice: number, maxPrice: number) {
     return await this.prisma.product.findMany({
       where: {
-        price: {
+        discountedPrice: {
           gte: minPrice,
           lte: maxPrice,
         },
@@ -412,7 +418,8 @@ export class GetProductsService {
         id: true,
         title: true,
         imageUrl: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         condition: true,
         createdAt: true,
         user: {
@@ -433,7 +440,7 @@ export class GetProductsService {
         },
       },
       orderBy: {
-        price: 'asc',
+        discountedPrice: 'asc',
       },
     });
   }
@@ -453,7 +460,8 @@ export class GetProductsService {
         id: true,
         title: true,
         imageUrl: true,
-        price: true,
+        originalPrice: true,
+        discountedPrice: true,
         condition: true,
         views: true,
         createdAt: true,

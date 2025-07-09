@@ -1,4 +1,5 @@
 import { PrismaService } from "../prisma/prisma.service";
+import { Prisma, Role } from '@prisma/client';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserDto } from "../user/dto/user.dto"; // Ensure this path is correct
 
@@ -23,7 +24,7 @@ export class UserService {
                     select: {
                         id: true,
                         title: true,  // Use 'title' not 'name'
-                        price: true,
+                        discountedPrice: true,
                         createdAt: true,
                         category: true,
                         isActive: true,
@@ -70,6 +71,8 @@ export class UserService {
                 email: updateUserDto.email,
                 firstName: updateUserDto.name,
                 availableSlots: updateUserDto.availableSlots,
+                ...(updateUserDto.role && { role: { set: updateUserDto.role as Role } }),
+
             },
             select: {
                 id: true,

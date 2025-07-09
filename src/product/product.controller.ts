@@ -2,9 +2,9 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe , 
 import { ProductService } from './product.service';
 import { ProductDto } from './dto/product.dto';
 import { AuthGuard } from '../guards/auth.guard'; // Adjust the import path as necessary
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
-import { UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import { UploadedFiles, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
 
 
 @Controller('products')
@@ -14,11 +14,11 @@ export class ProductController {
 
 @Post()
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('image')) // Add this to handle file upload
+  @UseInterceptors(FilesInterceptor('images')) // Add this to handle file upload
   async createProduct(
     @Body() productData: ProductDto, 
     @Request() req,
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 5MB
@@ -26,13 +26,13 @@ export class ProductController {
         ],
         fileIsRequired: false, // Make file optional
       })
-    ) file?: Express.Multer.File // Add this parameter to receive the uploaded file
+    ) files?: Express.Multer.File[] // Add this parameter to receive the uploaded file
   ) {
     const userId = req.user?.id;
     console.log('User ID from token:', userId);
-    console.log('Uploaded file:', file ? file.originalname : 'No file uploaded');
+console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.originalname) : 'No files uploaded');
     
-    return this.productService.createProduct(productData, userId, file);
+    return this.productService.createProduct(productData, userId , files);
   }
 
   @Get()

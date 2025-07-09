@@ -58,8 +58,8 @@ export class SignupService {
       this.logger.log(`User created successfully with ID: ${user.id}`);
       
          // Generate JWT token with minimal data
-      const token = this.jwtService.sign({
-        userId: user.id,
+      const access_token = this.jwtService.sign({
+        id: user.id,        // ← change from "userId" to "id"
         email: user.email,
         role: user.role
       });
@@ -69,6 +69,7 @@ export class SignupService {
         success: true,
         message: 'Account created successfully',
         user,
+         access_token, // <-- use the same field name as login
         remainingSlots: user.availableSlots - user.usedSlots
       };
 

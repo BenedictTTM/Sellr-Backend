@@ -35,9 +35,10 @@ CREATE TABLE "Product" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "imageUrl" TEXT NOT NULL,
+    "imageUrl" TEXT[],
     "category" TEXT NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
+    "originalPrice" DOUBLE PRECISION NOT NULL,
+    "discountedPrice" DOUBLE PRECISION NOT NULL,
     "stock" INTEGER NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isSold" BOOLEAN NOT NULL DEFAULT false,
@@ -48,6 +49,9 @@ CREATE TABLE "Product" (
     "locationLng" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "averageRating" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "totalReviews" INTEGER NOT NULL DEFAULT 0,
+    "lastRatingUpdate" TIMESTAMP(3),
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
@@ -145,6 +149,9 @@ CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
 CREATE INDEX "Product_userId_idx" ON "Product"("userId");
+
+-- CreateIndex
+CREATE INDEX "Product_averageRating_idx" ON "Product"("averageRating");
 
 -- CreateIndex
 CREATE INDEX "Payment_userId_idx" ON "Payment"("userId");

@@ -11,8 +11,8 @@ export class ProductService {
     private readonly getProductsService: GetProductsService
   ) {}
 
-  async createProduct(productData: ProductDto , userId: number , file?: Express.Multer.File) {
-    return this.crudService.createProduct(productData , userId , file);
+  async createProduct(productData: ProductDto , userId: number , files?: Express.Multer.File[]) {
+    return this.crudService.createProduct(productData , userId , files);
   }
 
     async updateProduct(productId: number, productData: ProductDto , userId:number) {
