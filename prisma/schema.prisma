@@ -39,6 +39,8 @@ model User {
   premiumTier    PremiumTier @default(FREE)
   availableSlots Int         @default(5)
   usedSlots      Int         @default(0)
+  refreshToken     String?   // Add this field
+  refreshTokenExp  DateTime? // Add expiration tracking
   premiumExpiry  DateTime?
 
   // Role & status
