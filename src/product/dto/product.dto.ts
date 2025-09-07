@@ -19,6 +19,7 @@ export class ProductDto {
     @IsNotEmpty({ message: 'Original price is required' })
     originalPrice: number;
 
+    
     @IsNumber()
     @IsNotEmpty({ message: 'Discounted price is required' })
     discountedPrice: number;
