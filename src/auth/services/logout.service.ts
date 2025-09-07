@@ -1,10 +1,16 @@
 import {Injectable , Logger } from '@nestjs/common';
+import { Response } from 'express';
 import { TokenService } from './token.service';
+import { CookieService } from './cookie.service';
 
+@Injectable()
 export class LogoutService  {
  private readonly logger = new Logger(LogoutService.name);
 
- constructor(private readonly tokenService: TokenService){}
+ constructor(
+   private readonly tokenService: TokenService,
+   private readonly cookieService: CookieService
+ ){}
 
  async logout(userId: number): Promise <string> {
     try{
@@ -17,4 +23,15 @@ export class LogoutService  {
         throw error;
     }
 }
+
+ /**
+  * Logout with HTTP-only cookie clearing
+  */
+ async logoutWithCookies(userId: number, res: Response): Promise<any> {
+    const logoutResult = await this.logout(userId);
+    return this.cookieService.handleLogoutResponse(res, { 
+      success: true, 
+      message: logoutResult 
+    });
+ }
 }
