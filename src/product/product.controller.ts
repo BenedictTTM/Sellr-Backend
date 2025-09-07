@@ -61,18 +61,20 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   async updateProduct(
     @Param('id') id: string, 
     @Body() productData: ProductDto, 
     @Request() req
   ) {
-    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    const userId = req.user?.id;
     return this.productService.updateProduct(+id, productData, userId);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard)
   async deleteProduct(@Param('id') id: string, @Request() req) {
-    const userId = req.user?.id || 1; // Extract from JWT token or use default for testing
+    const userId = req.user?.id;
     return this.productService.deleteProduct(+id, userId);
   }
 }

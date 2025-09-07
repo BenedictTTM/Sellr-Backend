@@ -1,9 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Enable cookie parser middleware
+  app.use(cookieParser());
   
   // Enable CORS for frontend connection
   app.enableCors({
@@ -34,3 +38,4 @@ async function bootstrap() {
   console.log(`🚀 Application is running on port ${port}`);
 }
 bootstrap();
+

@@ -1,6 +1,8 @@
 import { Injectable, ForbiddenException, Logger } from '@nestjs/common';
+import { Response } from 'express';
 import { TokenService } from './token.service';
 import { UserValidationService } from './user-validation.service';
+import { CookieService } from './cookie.service';
 
 @Injectable()
 export class RefreshTokenService {
@@ -9,6 +11,7 @@ export class RefreshTokenService {
   constructor(
     private readonly tokenService: TokenService,
     private readonly userValidationService: UserValidationService,
+    private readonly cookieService: CookieService,
   ) {}
 
   async refreshTokens(refreshToken: string) {
@@ -42,5 +45,13 @@ export class RefreshTokenService {
       this.logger.error(`Token refresh error: ${error.message}`);
       throw new ForbiddenException('Token refresh failed');
     }
+  }
+
+  /**
+   * Refresh tokens with HTTP-only cookie response handling
+   */
+  async refreshTokensWithCookies(refreshToken: string, res: Response) {
+    const refreshResult = await this.refreshTokens(refreshToken);
+    return this.cookieService.handleAuthResponse(res, refreshResult);
   }
 }

@@ -1,7 +1,10 @@
 import { Injectable, ConflictException, InternalServerErrorException, Logger } from "@nestjs/common";
+import { Response } from 'express';
 import { PrismaService } from "../../prisma/prisma.service";
 import { SignUpDto } from "../dto/signUp.dto";
 import { JwtService } from '@nestjs/jwt';
+import { TokenService } from './token.service';
+import { CookieService } from './cookie.service';
 import * as argon from 'argon2';
 
 @Injectable()
@@ -9,7 +12,9 @@ export class SignupService {
   private readonly logger = new Logger(SignupService.name);
 
   constructor(private prismaService: PrismaService,
-             private jwtService: JwtService
+             private jwtService: JwtService,
+             private readonly tokenService: TokenService,
+             private readonly cookieService: CookieService
   ) {}
    
 
@@ -57,19 +62,19 @@ export class SignupService {
 
       this.logger.log(`User created successfully with ID: ${user.id}`);
       
-         // Generate JWT token with minimal data
-      const access_token = this.jwtService.sign({
-        id: user.id,        // ← change from "userId" to "id"
-        email: user.email,
-        role: user.role
-      });
+      // Generate tokens using TokenService for consistency
+      const tokens = await this.tokenService.generateTokens(user.id, user.email, user.role);
+      
+      // Store refresh token
+      await this.tokenService.storeRefreshToken(user.id, tokens.refresh_token);
 
-      this.logger.log(`User created successfully with ID: ${user.id}`);
+      this.logger.log(`Tokens generated for new user: ${user.id}`);
       return {
         success: true,
         message: 'Account created successfully',
         user,
-         access_token, // <-- use the same field name as login
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
         remainingSlots: user.availableSlots - user.usedSlots
       };
 
@@ -115,5 +120,13 @@ export class SignupService {
     // Fallback for unexpected errors
     this.logger.error('Unexpected error during signup', error.stack);
     throw new InternalServerErrorException('An unexpected error occurred during registration');
+  }
+
+  /**
+   * Signup with HTTP-only cookie response handling
+   */
+  async signupWithCookies(dto: SignUpDto, res: Response) {
+    const signupResult = await this.signup(dto);
+    return this.cookieService.handleAuthResponse(res, signupResult);
   }
 }
