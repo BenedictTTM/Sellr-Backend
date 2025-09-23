@@ -13,11 +13,13 @@ import { PasswordResetService } from './services/passwordReset.service';
 import { PasswordResetController } from './passwordReset.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import  {CookieService} from './services/cookie.service';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     PrismaModule,
     ConfigModule,
+    EmailModule,
     JwtModule.registerAsync({
       global: true,
       imports: [ConfigModule],
