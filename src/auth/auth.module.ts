@@ -9,6 +9,8 @@ import { TokenService } from './services/token.service';
 import { UserValidationService } from './services/user-validation.service';
 import { RefreshTokenService } from './services/refresh-token.service';
 import { LogoutService } from './services/logout.service';
+import { PasswordResetService } from './services/passwordReset.service';
+import { PasswordResetController } from './passwordReset.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import  {CookieService} from './services/cookie.service';
 
@@ -28,7 +30,7 @@ import  {CookieService} from './services/cookie.service';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, PasswordResetController],
   providers: [
     AuthService,
     LoginService,
@@ -38,6 +40,7 @@ import  {CookieService} from './services/cookie.service';
     RefreshTokenService,
     LogoutService,
     CookieService,
+    PasswordResetService,
   ],
   exports: [
     AuthService,

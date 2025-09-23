@@ -8,6 +8,9 @@ import { AuthGuard } from '../guards/auth.guard';
 import { GetUser } from '../decorators/user.decorators';
 import { SignUpDto } from './dto/signUp.dto';
 import { LoginDto } from './dto/login.dto';
+import { PasswordResetController } from './passwordReset.controller';
+import { PasswordResetService } from "./services/passwordReset.service";
+
 
 @Controller('auth')
 export class AuthController {
