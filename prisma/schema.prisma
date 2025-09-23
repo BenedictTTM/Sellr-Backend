@@ -26,6 +26,8 @@ model User {
   updatedAt      DateTime  @updatedAt
   email          String    @unique
   passwordHash   String
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
   username       String    @unique
   phone          String?   @unique
   schoolId       String?   // e.g., student ID
