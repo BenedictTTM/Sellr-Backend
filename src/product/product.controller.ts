@@ -50,6 +50,25 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
     return await this.productService.getProductsByCategory(category);
   }
 
+  /**
+   * Get all products for the authenticated user
+   * @route GET /products/user/me
+   * @auth Required - Uses JWT from cookies
+   * @returns Array of products owned by the authenticated user
+   */
+  @Get('user/me')
+  @UseGuards(AuthGuard)
+  async getMyProducts(@Request() req) {
+    const userId = req.user?.id || req.user?.sub;
+    
+    if (!userId) {
+      throw new Error('User ID not found in request');
+    }
+
+    console.log(`📦 Fetching products for user ID: ${userId}`);
+    return await this.productService.getProductsByUserId(userId);
+  }
+
   @Get('user/:userId')
   async getProductsByUserId(@Param('userId', ParseIntPipe) userId: number) {
     return await this.productService.getProductsByUserId(userId);
