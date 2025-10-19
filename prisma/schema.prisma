@@ -7,124 +7,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PremiumTier {
-  FREE
-  BASIC
-  PREMIUM
-  ENTERPRISE
-}
-
-enum Role {
-  USER
-  ADMIN
-  MODERATOR
-}
-
 model User {
-  id             Int       @id @default(autoincrement())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  email          String    @unique
-  passwordHash   String
-  passwordResetToken       String?
-  passwordResetExpires     DateTime?
-  username       String    @unique
-  phone          String?   @unique
-  schoolId       String?   // e.g., student ID
-  schoolIdPic    String?
-  profilePic     String?
+  id                   Int         @id @default(autoincrement())
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  email                String      @unique
+  passwordHash         String
+  username             String      @unique
+  phone                String?     @unique
+  schoolId             String?
+  schoolIdPic          String?
+  profilePic           String?
+  firstName            String?
+  lastName             String?
+  storeName            String?
+  premiumTier          PremiumTier @default(FREE)
+  availableSlots       Int         @default(5)
+  usedSlots            Int         @default(0)
+  premiumExpiry        DateTime?
+  role                 Role        @default(USER)
+  isDeleted            Boolean     @default(false)
+  rating               Float       @default(0.0)
+  totalRatings         Int         @default(0)
+  passwordResetExpires DateTime?
+  passwordResetToken   String?
+  refreshToken         String?
+  refreshTokenExp      DateTime?
+  cart                 Cart?
+  receivedMessages     Message[]   @relation("ReceivedMessages")
+  sentMessages         Message[]   @relation("SentMessages")
+  payments             Payment[]
+  products             Product[]
+  reports              Report[]
+  reviews              Review[]    @relation("ReviewerReviews")
 
-  firstName      String?
-  lastName       String?
-
-  // Premium system
-  premiumTier    PremiumTier @default(FREE)
-  availableSlots Int         @default(5)
-  usedSlots      Int         @default(0)
-  refreshToken     String?   // Add this field
-  refreshTokenExp  DateTime? // Add expiration tracking
-  premiumExpiry  DateTime?
-
-  // Role & status
-  role           Role      @default(USER)
-  isDeleted      Boolean   @default(false)
-
-  // Ratings
-  rating         Float     @default(0.0)
-  totalRatings   Int       @default(0)
-
-  // Relationships
-  products       Product[]
-  payments       Payment[]
-  sentMessages   Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  reviews        Review[]  @relation("ReviewerReviews")
-  reports        Report[]
-  cart           Cart?
-  
   @@index([createdAt])
   @@index([premiumTier])
   @@index([role])
 }
 
 model Product {
-  id           Int             @id @default(autoincrement())
-  title        String
-  description  String?
-  imageUrl     String[]
-  category     String
-originalPrice   Float
-discountedPrice Float
-  stock        Int
-  isActive     Boolean         @default(true)
-  isSold       Boolean         @default(false)
-  condition    String          // e.g., "new", "used"
-  tags         String[]        // e.g., ["books", "electronics"]
-  views        Int             @default(0)
-  locationLat  Float?
-  locationLng  Float?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-
-  // Add cached rating fields
-  averageRating    Float        @default(0.0)
-  totalReviews     Int          @default(0)
+  id               Int            @id @default(autoincrement())
+  title            String
+  description      String?
+  imageUrl         String[]
+  category         String
+  originalPrice    Float
+  discountedPrice  Float
+  stock            Int
+  isActive         Boolean        @default(true)
+  isSold           Boolean        @default(false)
+  condition        String
+  tags             String[]
+  views            Int            @default(0)
+  locationLat      Float?
+  locationLng      Float?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  averageRating    Float          @default(0.0)
+  totalReviews     Int            @default(0)
   lastRatingUpdate DateTime?
-
-  // Relationships
-  userId       Int
-  user         User            @relation(fields: [userId], references: [id])
-  images       ProductImage[]
-  delivery     Delivery?
-  reviews      Review[]
-  reports      Report[]
-  cartItems    CartItem[]
+  userId           Int
+  cartItems        CartItem[]
+  delivery         Delivery?
+  user             User           @relation(fields: [userId], references: [id])
+  images           ProductImage[]
+  reports          Report[]
+  reviews          Review[]
 
   @@index([userId])
   @@index([averageRating])
 }
 
 model ProductImage {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   url       String
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Payment {
   id             Int         @id @default(autoincrement())
   amount         Float
   currency       String
-  status         String      @default("SUCCESS") // SUCCESS, FAILED, PENDING
+  status         String      @default("SUCCESS")
   transactionId  String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-
   premiumTier    PremiumTier
   slotsGranted   Int
   validityMonths Int
-  paymentType    String      @default("PREMIUM") // For future use
-
+  paymentType    String      @default("PREMIUM")
   userId         Int
   user           User        @relation(fields: [userId], references: [id])
 
@@ -136,58 +109,49 @@ model Message {
   id         Int      @id @default(autoincrement())
   content    String
   sentAt     DateTime @default(now())
-
   senderId   Int
   receiverId Int
-
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
   receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
 }
 
-
-
 model Review {
-  id          Int      @id @default(autoincrement())
-  rating      Int      // 1 to 5
-  comment     String?
-  createdAt   DateTime @default(now())
-
-  reviewerId  Int
-  productId   Int
-
-  reviewer    User     @relation("ReviewerReviews", fields: [reviewerId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
+  id         Int      @id @default(autoincrement())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  reviewerId Int
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  reviewer   User     @relation("ReviewerReviews", fields: [reviewerId], references: [id])
 }
 
 model Delivery {
-  id         Int     @id @default(autoincrement())
-  method     String  // e.g., "pickup", "delivery"
-  location   String?
-  fee        Float?
-
-  productId  Int      @unique
-  product    Product @relation(fields: [productId], references: [id])
+  id        Int     @id @default(autoincrement())
+  method    String
+  location  String?
+  fee       Float?
+  productId Int     @unique
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Report {
-  id         Int      @id @default(autoincrement())
-  reason     String
-  createdAt  DateTime @default(now())
-
-  userId     Int
-  productId  Int?
-
-  user       User     @relation(fields: [userId], references: [id])
-  product    Product? @relation(fields: [productId], references: [id])
+  id        Int      @id @default(autoincrement())
+  reason    String
+  createdAt DateTime @default(now())
+  userId    Int
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Cart {
   id        Int        @id @default(autoincrement())
   userId    Int        @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
 
   @@index([userId])
 }
@@ -195,14 +159,27 @@ model Cart {
 model CartItem {
   id        Int      @id @default(autoincrement())
   cartId    Int
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId Int
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([cartId, productId]) // Prevent duplicate products in the same cart
+  @@unique([cartId, productId])
   @@index([cartId])
   @@index([productId])
+}
+
+enum PremiumTier {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
 }

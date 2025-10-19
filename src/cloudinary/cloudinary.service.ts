@@ -51,4 +51,58 @@ export class CloudinaryService {
       console.log('⏳ Upload stream created and file piped...');
     });
   }
+
+  /**
+   * Upload profile picture with optimized settings
+   * Professional approach: Separate folder, auto-crop to square, optimize quality
+   */
+  async uploadProfilePicture(
+    file: Express.Multer.File,
+  ): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    
+    console.log('🚀 CloudinaryService.uploadProfilePicture called');
+    console.log('📁 File details:', {
+      originalname: file?.originalname,
+      mimetype: file?.mimetype,
+      size: file?.size,
+    });
+    
+    return new Promise((resolve, reject) => {
+      const upload = v2.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'profile_pictures', // Separate folder for profile pics
+          transformation: [
+            {
+              width: 400,
+              height: 400,
+              crop: 'fill', // Auto-crop to square
+              gravity: 'face', // Focus on face if detected
+              quality: 'auto', // Auto-optimize quality
+              fetch_format: 'auto', // Auto-select best format (WebP, etc.)
+            }
+          ],
+          allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], // Restrict to image formats
+        },
+        (error, result) => {
+          if (error) {
+            console.error('❌ Profile picture upload error:', error);
+            return reject(error);
+          }
+          
+          if (result) {
+            console.log('✅ Profile picture upload successful:', {
+              public_id: result.public_id,
+              secure_url: result.secure_url,
+            });
+            resolve(result);
+          } else {
+            reject(new Error('Profile picture upload failed'));
+          }
+        }
+      );
+
+      toStream(file.buffer).pipe(upload);
+    });
+  }
 }

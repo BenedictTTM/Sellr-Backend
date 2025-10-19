@@ -6,10 +6,25 @@ export class UserDto {
     @IsString({message: 'Email must be a string'})
     email: string;
 
-     @IsOptional()
+    @IsOptional()
     @IsString()
     name?: string;
 
+    @IsOptional()
+    @IsString()
+    firstName?: string;
+
+    @IsOptional()
+    @IsString()
+    lastName?: string;
+
+    @IsOptional()
+    @IsString()
+    storeName?: string;
+
+    @IsOptional()
+    @IsString()
+    profilePic?: string;
 
     @IsOptional()
     @IsNumber()
@@ -21,9 +36,7 @@ export class UserDto {
 
     @IsOptional()
     @IsString()
-    role?: string; // <-- Add this line
-
-    
+    role?: string;
 }
 
 
