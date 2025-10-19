@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoginService } from './services/login.service';
 import { SignupService } from './services/signup.service';
@@ -41,5 +41,65 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async logout(@GetUser() user: any, @Res({ passthrough: true }) res: Response) {
     return this.logoutService.logoutWithCookies(user.id, res);
+  }
+
+  /**
+   * Verify Token Endpoint
+   * 
+   * Validates the access token and returns user information if valid.
+   * Used by frontend to verify authentication status.
+   * 
+   * @route GET /auth/verify
+   * @returns User information if token is valid
+   * @throws UnauthorizedException if token is invalid or expired
+   */
+  @Get('verify')
+  @UseGuards(AuthGuard)
+  async verify(@GetUser() user: any) {
+    // AuthGuard already validated the token and attached user to request
+    return {
+      success: true,
+      message: 'Token is valid',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        premiumTier: user.premiumTier,
+        availableSlots: user.availableSlots,
+        usedSlots: user.usedSlots,
+      },
+    };
+  }
+
+  /**
+   * Get Current User Endpoint
+   * 
+   * Returns the authenticated user's profile information.
+   * Used by frontend to retrieve user details from token.
+   * 
+   * @route GET /auth/me
+   * @returns Current user's profile data
+   * @throws UnauthorizedException if not authenticated
+   */
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getCurrentUser(@GetUser() user: any) {
+    // Return sanitized user object (no sensitive data)
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        premiumTier: user.premiumTier,
+        availableSlots: user.availableSlots,
+        usedSlots: user.usedSlots,
+        createdAt: user.createdAt,
+      },
+    };
   }
 }
