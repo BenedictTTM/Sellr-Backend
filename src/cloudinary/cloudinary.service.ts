@@ -65,9 +65,21 @@ export class CloudinaryService {
       originalname: file?.originalname,
       mimetype: file?.mimetype,
       size: file?.size,
+      bufferExists: !!file?.buffer,
+      bufferLength: file?.buffer?.length,
     });
+
+    if (!file || !file.buffer) {
+      throw new Error('Invalid file: No file buffer provided');
+    }
     
     return new Promise((resolve, reject) => {
+      // Set a timeout for the upload (60 seconds)
+      const uploadTimeout = setTimeout(() => {
+        console.error('❌ Upload timeout after 60 seconds');
+        reject(new Error('Upload timeout - Please check your internet connection'));
+      }, 60000);
+
       const upload = v2.uploader.upload_stream(
         {
           resource_type: 'image',
@@ -83,10 +95,17 @@ export class CloudinaryService {
             }
           ],
           allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], // Restrict to image formats
+          timeout: 60000, // 60 second timeout
         },
         (error, result) => {
+          clearTimeout(uploadTimeout); // Clear the timeout if we get a response
+          
           if (error) {
-            console.error('❌ Profile picture upload error:', error);
+            console.error('❌ Profile picture upload error:', {
+              message: error.message,
+              http_code: error.http_code,
+              name: error.name,
+            });
             return reject(error);
           }
           
@@ -94,14 +113,18 @@ export class CloudinaryService {
             console.log('✅ Profile picture upload successful:', {
               public_id: result.public_id,
               secure_url: result.secure_url,
+              format: result.format,
+              bytes: result.bytes,
             });
             resolve(result);
           } else {
-            reject(new Error('Profile picture upload failed'));
+            console.error('❌ Upload failed - no result returned');
+            reject(new Error('Profile picture upload failed - no result'));
           }
         }
       );
 
+      console.log('🔄 Piping file buffer to Cloudinary upload stream...');
       toStream(file.buffer).pipe(upload);
     });
   }

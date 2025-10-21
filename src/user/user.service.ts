@@ -8,6 +8,7 @@ import { UpdateProfileDto } from "../user/dto/update-profile.dto";
 export class UserService {
     constructor(private readonly prismaService: PrismaService) {}
 
+
     async getUserById(userId: number) {
         const user = await this.prismaService.user.findUnique({
             where: { id: userId },
