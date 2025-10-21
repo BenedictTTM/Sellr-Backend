@@ -1,0 +1,45 @@
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build
+dist
+build
+*.log
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# Cache
+.eslintcache
+.cache
+
+# Misc
+.git
+.gitignore
+README.md
+*.md
+.dockerignore
+Dockerfile
+
+# OS
+Thumbs.db
