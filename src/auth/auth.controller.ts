@@ -44,6 +44,28 @@ export class AuthController {
   }
 
   /**
+   * Lightweight session probe
+   *
+   * Provides a quick way for the frontend to validate whether the
+   * authenticated session is still active. The AuthGuard will reject
+   * unauthenticated requests with a 401, so a simple 200 response here
+   * confirms the user is still logged in.
+   */
+  @Get('session')
+  @UseGuards(AuthGuard)
+  async session(@GetUser() user: any) {
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      message: 'Session is active',
+    };
+  }
+
+  /**
    * Verify Token Endpoint
    * 
    * Validates the access token and returns user information if valid.
