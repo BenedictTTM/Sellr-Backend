@@ -1,16 +1,19 @@
-import { Controller, Get, Post, Body, Res, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Req, UseGuards, UnauthorizedException, Logger } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoginService } from './services/login.service';
 import { SignupService } from './services/signup.service';
 import { RefreshTokenService } from './services/refresh-token.service';
 import { LogoutService } from './services/logout.service';
 import { AuthGuard } from '../guards/auth.guard';
+import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { GetUser } from '../decorators/user.decorators';
 import { SignUpDto } from './dto/signUp.dto';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly loginService: LoginService,
     private readonly signupService: SignupService,
@@ -28,13 +31,55 @@ export class AuthController {
     return this.signupService.signupWithCookies(dto, res);
   }
 
+  /**
+   * Refresh Access Token Endpoint
+   * 
+   * Generates new access and refresh tokens using the refresh token from cookies.
+   * Implements token rotation for enhanced security - old refresh token is invalidated.
+   * 
+   * Security Features:
+   * - Uses RefreshTokenGuard for specialized validation
+   * - Validates refresh token signature and expiration
+   * - Checks token against database (prevents reuse)
+   * - Implements token rotation (new refresh token issued)
+   * - Returns new tokens via HTTP-only cookies
+   * 
+   * Flow:
+   * 1. RefreshTokenGuard validates refresh token from cookie
+   * 2. Service verifies token against database hash
+   * 3. New access + refresh tokens generated
+   * 4. Old refresh token invalidated
+   * 5. New tokens stored in HTTP-only cookies
+   * 
+   * @route POST /auth/refresh
+   * @guard RefreshTokenGuard - Validates refresh token
+   * @cookie refresh_token - Required HTTP-only cookie
+   * @returns Success message with new tokens in cookies
+   * @throws UnauthorizedException if refresh token is invalid/expired
+   * 
+   * @example
+   * // Frontend usage (automatic via cookies):
+   * fetch('/api/auth/refresh', { 
+   *   method: 'POST',
+   *   credentials: 'include'
+   * })
+   */
   @Post('refresh')
+  @UseGuards(RefreshTokenGuard)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    this.logger.debug('🔄 Token refresh request received');
+    
     const refreshToken = req.cookies?.refresh_token;
     if (!refreshToken) {
+      this.logger.warn('❌ Refresh token not found in cookies');
       throw new UnauthorizedException('Refresh token not found');
     }
-    return this.refreshTokenService.refreshTokensWithCookies(refreshToken, res);
+    
+    this.logger.debug('✅ Refresh token found, processing...');
+    const result = await this.refreshTokenService.refreshTokensWithCookies(refreshToken, res);
+    
+    this.logger.log('✅ Tokens refreshed successfully');
+    return result;
   }
 
   @Post('logout')
