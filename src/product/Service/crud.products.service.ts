@@ -4,14 +4,22 @@ import {
   ForbiddenException,
   InternalServerErrorException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductDto } from '../dto/product.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { MeiliSearchService } from '../../meilisearch/meilisearch.service';
 
 @Injectable()
 export class CrudService {
-  constructor(private prisma: PrismaService, private cloudinaryService: CloudinaryService) {}
+  private readonly logger = new Logger(CrudService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
+    private meilisearchService: MeiliSearchService,
+  ) {}
 
   async uploadImageToCloudinary(file: Express.Multer.File) {
     return await this.cloudinaryService.uploadImage(file).catch(() => {
@@ -60,6 +68,15 @@ export class CrudService {
         user: { connect: { id: userId } },
       },
     });
+
+      // Index the product in MeiliSearch
+      try {
+        await this.meilisearchService.indexProduct(newProduct);
+        this.logger.log(`✅ Product ${newProduct.id} indexed in MeiliSearch`);
+      } catch (searchError) {
+        this.logger.error(`⚠️ Failed to index product in MeiliSearch: ${searchError.message}`);
+        // Don't fail the request if search indexing fails
+      }
       
       return { success: true, data: newProduct };
     } catch (error) {
@@ -85,6 +102,15 @@ export class CrudService {
           ...productData,
         },
       });
+
+      // Update in MeiliSearch
+      try {
+        await this.meilisearchService.updateProduct(productId, updated);
+        this.logger.log(`✅ Product ${productId} updated in MeiliSearch`);
+      } catch (searchError) {
+        this.logger.error(`⚠️ Failed to update product in MeiliSearch: ${searchError.message}`);
+      }
+
       return { success: true, data: updated };
     } catch (error) {
        console.error('Database error:', error);
@@ -108,6 +134,15 @@ export class CrudService {
           isActive: false,
         },
       });
+
+      // Update in MeiliSearch (mark as inactive)
+      try {
+        await this.meilisearchService.updateProduct(productId, softDeleted);
+        this.logger.log(`✅ Product ${productId} marked inactive in MeiliSearch`);
+      } catch (searchError) {
+        this.logger.error(`⚠️ Failed to update product in MeiliSearch: ${searchError.message}`);
+      }
+
       return { success: true, data: softDeleted };
     } catch (error) {
       throw new InternalServerErrorException('Failed to delete product');
