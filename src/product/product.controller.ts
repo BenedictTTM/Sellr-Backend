@@ -7,6 +7,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { UploadedFiles, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
 import { MeiliSearchService } from '../meilisearch/meilisearch.service';
 import { SearchProductsService } from './Service/search.products.service';
+import { FlashSalesService } from './Service/flashsales.service';
 
 
 @Controller('products')
@@ -15,6 +16,7 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly meilisearchService: MeiliSearchService,
     private readonly searchProductsService: SearchProductsService,
+    private readonly flashSalesService: FlashSalesService,
   ) {}
 
 
@@ -157,6 +159,16 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
     return await this.productService.getProductsByUserId(userId);
   }
 
+  /**
+   * Get flash sales products (30-70% discount, refreshed hourly)
+   * @route GET /products/flash-sales
+   * @returns Flash sale products with next refresh time and countdown
+   */
+  @Get('flash-sales')
+  async getFlashSales() {
+    return await this.flashSalesService.getFlashSales();
+  }
+
   @Get(':id')
   async getProductById(@Param('id', ParseIntPipe) productId: number) {
     return await this.productService.getProductById(productId);
@@ -205,5 +217,14 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
   async getSearchStats() {
     const stats = await this.meilisearchService.getIndexStats();
     return stats;
+  }
+
+  /**
+   * Force refresh flash sales (admin/testing)
+   * @route POST /products/flash-sales/refresh
+   */
+  @Post('flash-sales/refresh')
+  async refreshFlashSales() {
+    return await this.flashSalesService.forceRefresh();
   }
 }

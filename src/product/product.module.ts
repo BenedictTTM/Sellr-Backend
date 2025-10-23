@@ -4,6 +4,7 @@ import { ProductService } from './product.service';
 import { CrudService } from './Service/crud.products.service';
 import { GetProductsService } from './Service/getproducts.service';
 import { SearchProductsService } from './Service/search.products.service';
+import { FlashSalesService } from './Service/flashsales.service';
 import { PrismaModule } from '../prisma/prisma.module'; // Adjust path as needed
 import { AuthGuard } from '../guards/auth.guard'; // Adjust path as needed
 import { RolesGuard } from '../guards/roles.guard'; // Adjust path as needed
@@ -19,6 +20,7 @@ import { MeiliSearchModule } from '../meilisearch/meilisearch.module';
     CrudService,
     GetProductsService,
     SearchProductsService,
+    FlashSalesService,
     AuthGuard, 
     RolesGuard
   ],

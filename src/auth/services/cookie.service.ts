@@ -17,7 +17,7 @@ export class CookieService {
 
   setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
     const isProduction = this.configService.get('NODE_ENV') === 'production';
-    const accessTokenMaxAge = parseInt(this.configService.get('JWT_EXPIRES_IN_MS', '900000'));
+    const accessTokenMaxAge = parseInt(this.configService.get('JWT_EXPIRES_IN_MS', '1500000'));
     const refreshTokenMaxAge = parseInt(this.configService.get('JWT_REFRESH_EXPIRES_IN_MS', '604800000'));
     
     this.logger.debug('🍪 Setting authentication cookies', {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -13,6 +14,7 @@ import { MeiliSearchModule } from './meilisearch/meilisearch.module';
     ConfigModule.forRoot({
       isGlobal: true, // Makes ConfigModule available globally
     }),
+    ScheduleModule.forRoot(), // Enable cron jobs
     AuthModule,
     UserModule,
     PrismaModule,
