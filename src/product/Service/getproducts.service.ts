@@ -12,7 +12,17 @@ export class GetProductsService {
     private meilisearchService: MeiliSearchService,
   ) {}
 
-  async getAllProducts() {
+  async getAllProducts(page: number = 1, limit: number = 20) {
+    // Validate and sanitize inputs
+    const validatedPage = Math.max(1, page);
+    const validatedLimit = Math.min(Math.max(1, limit), 100); // Max 100 items per page
+    const skip = (validatedPage - 1) * validatedLimit;
+
+    // Get total count for pagination metadata
+    const totalCount = await this.prisma.product.count({
+      where: { isActive: true },
+    });
+
     const products = await this.prisma.product.findMany({
       where: { isActive: true },
       select: {
@@ -87,14 +97,28 @@ export class GetProductsService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: validatedLimit,
     });
 
-    return products.map(product => ({
-      ...product,
-      averageRating: this.calculateAverageRating(product.reviews),
-      totalReviews: product._count.reviews,
-      ratingDistribution: this.getRatingDistribution(product.reviews),
-    }));
+    const totalPages = Math.ceil(totalCount / validatedLimit);
+
+    return {
+      data: products.map(product => ({
+        ...product,
+        averageRating: this.calculateAverageRating(product.reviews),
+        totalReviews: product._count.reviews,
+        ratingDistribution: this.getRatingDistribution(product.reviews),
+      })),
+      pagination: {
+        page: validatedPage,
+        limit: validatedLimit,
+        totalCount,
+        totalPages,
+        hasNextPage: validatedPage < totalPages,
+        hasPreviousPage: validatedPage > 1,
+      },
+    };
   }
 
   async getProductById(productId: number) {
@@ -343,7 +367,22 @@ export class GetProductsService {
     }
   }
 
-  async getProductsByCategory(category: string) {
+  async getProductsByCategory(category: string, page: number = 1, limit: number = 20) {
+    const validatedPage = Math.max(1, page);
+    const validatedLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (validatedPage - 1) * validatedLimit;
+
+    const totalCount = await this.prisma.product.count({
+      where: {
+        category: {
+          equals: category,
+          mode: 'insensitive',
+        },
+        isActive: true,
+        isSold: false,
+      },
+    });
+
     const products = await this.prisma.product.findMany({
       where: {
         category: {
@@ -395,16 +434,41 @@ export class GetProductsService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: validatedLimit,
     });
 
-    return products.map(product => ({
-      ...product,
-      averageRating: this.calculateAverageRating(product.reviews),
-      totalReviews: product._count.reviews,
-    }));
+    const totalPages = Math.ceil(totalCount / validatedLimit);
+
+    return {
+      data: products.map(product => ({
+        ...product,
+        averageRating: this.calculateAverageRating(product.reviews),
+        totalReviews: product._count.reviews,
+      })),
+      pagination: {
+        page: validatedPage,
+        limit: validatedLimit,
+        totalCount,
+        totalPages,
+        hasNextPage: validatedPage < totalPages,
+        hasPreviousPage: validatedPage > 1,
+      },
+    };
   }
 
-  async getProductsByUserId(userId: number) {
+  async getProductsByUserId(userId: number, page: number = 1, limit: number = 20) {
+    const validatedPage = Math.max(1, page);
+    const validatedLimit = Math.min(Math.max(1, limit), 100);
+    const skip = (validatedPage - 1) * validatedLimit;
+
+    const totalCount = await this.prisma.product.count({
+      where: {
+        userId: userId,
+        isActive: true,
+      },
+    });
+
     const products = await this.prisma.product.findMany({
       where: {
         userId: userId,
@@ -444,13 +508,27 @@ export class GetProductsService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: validatedLimit,
     });
 
-    return products.map(product => ({
-      ...product,
-      averageRating: this.calculateAverageRating(product.reviews),
-      totalReviews: product._count.reviews,
-    }));
+    const totalPages = Math.ceil(totalCount / validatedLimit);
+
+    return {
+      data: products.map(product => ({
+        ...product,
+        averageRating: this.calculateAverageRating(product.reviews),
+        totalReviews: product._count.reviews,
+      })),
+      pagination: {
+        page: validatedPage,
+        limit: validatedLimit,
+        totalCount,
+        totalPages,
+        hasNextPage: validatedPage < totalPages,
+        hasPreviousPage: validatedPage > 1,
+      },
+    };
   }
 
   async getProductsByCondition(condition: string) {

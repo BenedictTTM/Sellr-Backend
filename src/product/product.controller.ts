@@ -44,8 +44,11 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
   }
 
   @Get()
-  async getAllProducts() {
-    return await this.productService.getAllProducts();
+  async getAllProducts(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
+    return await this.productService.getAllProducts(page, limit);
   }
 
   /**
@@ -131,8 +134,12 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
   }
 
   @Get('category/:category')
-  async getProductsByCategory(@Param('category') category: string) {
-    return await this.productService.getProductsByCategory(category);
+  async getProductsByCategory(
+    @Param('category') category: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
+    return await this.productService.getProductsByCategory(category, page, limit);
   }
 
   /**
@@ -143,7 +150,11 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
    */
   @Get('user/me')
   @UseGuards(AuthGuard)
-  async getMyProducts(@Request() req) {
+  async getMyProducts(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
     const userId = req.user?.id || req.user?.sub;
     
     if (!userId) {
@@ -151,12 +162,16 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
     }
 
     console.log(`📦 Fetching products for user ID: ${userId}`);
-    return await this.productService.getProductsByUserId(userId);
+    return await this.productService.getProductsByUserId(userId, page, limit);
   }
 
   @Get('user/:userId')
-  async getProductsByUserId(@Param('userId', ParseIntPipe) userId: number) {
-    return await this.productService.getProductsByUserId(userId);
+  async getProductsByUserId(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
+    return await this.productService.getProductsByUserId(userId, page, limit);
   }
 
   /**
@@ -199,7 +214,10 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
    */
   @Post('sync/meilisearch')
   async syncToMeiliSearch() {
-    const products = await this.productService.getAllProducts();
+    // Get all products without pagination for sync
+    const result = await this.productService.getAllProducts(1, 10000);
+    const products = result.data;
+    
     await this.meilisearchService.syncAllProducts(products);
     
     return {

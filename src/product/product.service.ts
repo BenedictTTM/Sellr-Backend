@@ -23,20 +23,20 @@ export class ProductService {
         return this.crudService.deleteProduct(productId , userId);
     }
 
-    async getAllProducts() {
-        return this.getProductsService.getAllProducts();
+    async getAllProducts(page?: number, limit?: number) {
+        return this.getProductsService.getAllProducts(page, limit);
     }
 
     async getProductById(productId : number ){
         return this.getProductsService.getProductById(productId);
     }
 
-    async getProductsByUserId(userId: number) {
-        return this.getProductsService.getProductsByUserId(userId);
+    async getProductsByUserId(userId: number, page?: number, limit?: number) {
+        return this.getProductsService.getProductsByUserId(userId, page, limit);
     }
    
-    async getProductsByCategory(category: string) {
-        return this.getProductsService.getProductsByCategory(category);
+    async getProductsByCategory(category: string, page?: number, limit?: number) {
+        return this.getProductsService.getProductsByCategory(category, page, limit);
     }
 
     async searchProducts(query: string) {
