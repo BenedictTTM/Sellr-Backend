@@ -189,6 +189,7 @@ console.log('Uploaded files:', files && files.length > 0 ? files.map(f => f.orig
     return await this.productService.getProductById(productId);
   }
 
+
   @Put(':id')
   @UseGuards(AuthGuard)
   async updateProduct(
