@@ -53,9 +53,46 @@ export class MeiliSearchService implements OnModuleInit {
       // Get or create products index
       this.productsIndex = this.client.index('products');
       
-      // Verify index exists
-      const indexInfo = await this.productsIndex.fetchInfo();
-      this.logger.log(`✅ Connected to index: ${indexInfo.uid}`);
+      // Try to verify index exists, create if it doesn't
+      try {
+        const indexInfo = await this.productsIndex.fetchInfo();
+        this.logger.log(`✅ Connected to index: ${indexInfo.uid}`);
+      } catch (error) {
+        if (error.cause?.code === 'index_not_found') {
+          this.logger.warn('⚠️ Products index not found, creating it...');
+          await this.client.createIndex('products', { primaryKey: 'id' });
+          this.logger.log('✅ Created products index');
+          
+          // Configure searchable and filterable attributes
+          await this.productsIndex.updateSearchableAttributes([
+            'title',
+            'description',
+            'tags',
+            'category',
+            'condition',
+          ]);
+          
+          await this.productsIndex.updateFilterableAttributes([
+            'category',
+            'condition',
+            'discount',
+            'originalPrice',
+            'discountedPrice',
+            'createdAt',
+          ]);
+          
+          await this.productsIndex.updateSortableAttributes([
+            'createdAt',
+            'originalPrice',
+            'discountedPrice',
+            'discount',
+          ]);
+          
+          this.logger.log('✅ Configured products index attributes');
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
       this.logger.error('❌ Failed to initialize MeiliSearch:', error.message);
       throw error;
