@@ -8,6 +8,8 @@ import { ProductModule } from './product/product.module'
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CartModule } from './cart/cart.module';
 import { MeiliSearchModule } from './meilisearch/meilisearch.module';
+import { PaymentModule } from './payment/payment.module';
+import { SlotModule } from './slot/slot.module';
 
 @Module({
   imports: [
@@ -22,6 +24,9 @@ import { MeiliSearchModule } from './meilisearch/meilisearch.module';
     CloudinaryModule,
     CartModule,
     MeiliSearchModule,
+    PaymentModule,
+    // Slot management
+    SlotModule,
   ],
 })
 export class AppModule {}

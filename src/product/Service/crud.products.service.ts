@@ -48,27 +48,44 @@ export class CrudService {
       imageUrls,
       userId
     });
+const newProduct = await this.prisma.$transaction(async (prisma) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
- const newProduct = await this.prisma.product.create({
-      data: {
-        title: productDataWithoutUser.title,
-        description: productDataWithoutUser.description,
-        originalPrice: productDataWithoutUser.originalPrice, // <-- add this
-        discountedPrice: productDataWithoutUser.discountedPrice, // <-- add this
-        category: productDataWithoutUser.category,
-        imageUrl: imageUrls ,// Default to empty string if no images
-        isActive: true,
-        isSold: false,
-        condition: '',
-        tags: productDataWithoutUser.tags || [],
-        locationLat: productDataWithoutUser.locationLat || 0.0,
-        locationLng: productDataWithoutUser.locationLng || 0.0,
-        stock: 1,
-        views: 0,
-        user: { connect: { id: userId } },
-      },
-    });
+  if (!user) {
+    throw new NotFoundException(`User with ID ${userId} not found`);
+  }
 
+  if ((user.availableSlots ?? 0) <= 0) {
+    throw new BadRequestException('No available product slots for this user');
+  }
+
+  const created = await prisma.product.create({
+    data: {
+      title: productDataWithoutUser.title,
+      description: productDataWithoutUser.description,
+      originalPrice: productDataWithoutUser.originalPrice,
+      discountedPrice: productDataWithoutUser.discountedPrice,
+      category: productDataWithoutUser.category,
+      imageUrl: imageUrls,
+      isActive: true,
+      isSold: false,
+  condition: (productDataWithoutUser as any).condition ?? '',
+      tags: productDataWithoutUser.tags ?? [],
+      locationLat: productDataWithoutUser.locationLat ?? 0.0,
+      locationLng: productDataWithoutUser.locationLng ?? 0.0,
+      stock: productDataWithoutUser.stock ?? 0,
+      views: productDataWithoutUser.views ?? 0,
+      user: { connect: { id: userId } },
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { availableSlots: { decrement: 1 }, usedSlots: { increment: 1 } },
+  });
+
+  return created;
+});
       // Index the product in MeiliSearch
       try {
         await this.meilisearchService.indexProduct(newProduct);

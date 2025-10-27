@@ -52,4 +52,7 @@ export class ProductDto {
   @IsArray()
   @IsOptional()
   tags?: string[] = []; //w Default empty array
+
+  @IsNumber({}, { message: 'Stock must be a number' })
+  stock: number 
 }

@@ -166,6 +166,7 @@ export class AuthController {
         availableSlots: user.availableSlots,
         usedSlots: user.usedSlots,
         createdAt: user.createdAt,
+
       },
     };
   }

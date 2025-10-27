@@ -89,9 +89,11 @@ model ProductImage {
 model Payment {
   id             Int         @id @default(autoincrement())
   amount         Float
-  currency       String
-  status         String      @default("SUCCESS")
+  currency       String   @default("GHS")
+  status         String      @default("PENDING")
   transactionId  String?
+  providerPaymentId String?  @unique
+  metadata       Json?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   premiumTier    PremiumTier
