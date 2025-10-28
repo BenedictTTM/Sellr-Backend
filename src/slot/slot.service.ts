@@ -92,4 +92,33 @@ export class SlotService {
     if (!user) throw new NotFoundException(`User ${userId} not found`);
     return user;
   }
+
+  /**
+   * Get payment status - useful for frontend to check if payment completed
+   */
+  async getPaymentStatus(paymentId: number) {
+    const payment = await this.prisma.payment.findUnique({ 
+      where: { id: paymentId },
+      select: { 
+        id: true, 
+        status: true, 
+        amount: true, 
+        slotsGranted: true,
+        metadata: true,
+        createdAt: true,
+        updatedAt: true 
+      }
+    });
+    
+    if (!payment) {
+      throw new NotFoundException(`Payment ${paymentId} not found`);
+    }
+    
+    return {
+      ...payment,
+      isCompleted: payment.status?.toLowerCase().includes('success'),
+      isPending: payment.status?.toLowerCase() === 'pending',
+      isFailed: payment.status?.toLowerCase().includes('fail'),
+    };
+  }
 }

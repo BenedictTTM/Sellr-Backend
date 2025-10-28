@@ -13,6 +13,12 @@ export class SlotController {
     return this.slotService.purchaseSlots(userId, slots);
   }
 
+  // Check payment status (useful for frontend to verify payment completion)
+  @Get('payment-status/:paymentId')
+  async checkPaymentStatus(@Param('paymentId') paymentId: string) {
+    return this.slotService.getPaymentStatus(Number(paymentId));
+  }
+
   // Admin / test endpoint to directly credit slots to a user
   @Post('credit')
   async credit(@Body() body: CreateSlotDto) {

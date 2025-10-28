@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus, Req, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus, Req, Res, Logger } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { Request, Response } from 'express';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -6,7 +6,12 @@ import { PaystackService } from './paystack.service';
 
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService, private readonly paystackService: PaystackService) {}
+  private readonly logger = new Logger(PaymentController.name);
+
+  constructor(
+    private readonly paymentService: PaymentService, 
+    private readonly paystackService: PaystackService
+  ) {}
 
   @Post()
   async create(@Body() body: CreatePaymentDto) {
@@ -28,38 +33,51 @@ export class PaymentController {
   }
 
 
-  // Generic webhook endpoint - validate signatures in production
+  // Enhanced webhook endpoint with proper monitoring
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   async webhook(@Req() req: Request, @Res() res: Response) {
     const signature = (req.headers['x-paystack-signature'] as string) || null;
     const rawBody = (req as any).rawBody ?? JSON.stringify(req.body);
-
-    // In production, enforce signature validation. In development/testing, log warning but proceed.
-    const isProduction = process.env.NODE_ENV === 'production';
-    const valid = this.paystackService.verifySignature(rawBody, signature);
-    
-    if (!valid) {
-      if (isProduction) {
-        // Strict validation in production
-        return res.status(400).json({ ok: false, message: 'invalid signature' });
-      } else {
-        // Allow in development but warn
-        console.warn('⚠️  Webhook received without valid signature (development mode - proceeding anyway)');
-      }
-    }
-
     const payload = req.body;
+
     try {
-      // Paystack sends payload.data.reference and payload.data.status
+      this.logger.log(`Webhook received: ${JSON.stringify({ 
+        hasSignature: !!signature, 
+        payloadKeys: Object.keys(payload) 
+      })}`);
+
+      // Signature validation
+      const isProduction = process.env.NODE_ENV === 'production';
+      const valid = this.paystackService.verifySignature(rawBody, signature);
+      
+      if (!valid) {
+        this.logger.warn('Webhook signature validation failed');
+        
+        if (isProduction) {
+          return res.status(400).json({ ok: false, message: 'invalid signature' });
+        } else {
+          this.logger.warn('⚠️  Webhook received without valid signature (development mode - proceeding anyway)');
+        }
+      }
+
+      // Process webhook
       const data = payload?.data ?? payload;
       const providerPaymentId = data?.reference ?? data?.id ?? null;
       const status = data?.status ?? payload?.status ?? 'unknown';
 
+      if (!providerPaymentId) {
+        this.logger.warn('Webhook missing payment reference');
+        return res.status(400).json({ ok: false, message: 'missing payment reference' });
+      }
+
       const result = await this.paymentService.handleWebhook({ providerPaymentId, status });
+      
+      this.logger.log(`Webhook processed successfully: paymentRef=${providerPaymentId} status=${status}`);
       return res.status(200).json(result);
+
     } catch (err) {
-      console.error('Webhook processing error:', err);
+      this.logger.error('Webhook processing error:', err);
       return res.status(500).json({ ok: false, error: String(err) });
     }
   }
