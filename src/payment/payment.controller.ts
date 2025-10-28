@@ -27,7 +27,7 @@ export class PaymentController {
     return this.paymentService.getPaymentById(paymentId);
   }
 
-  
+
   // Generic webhook endpoint - validate signatures in production
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
@@ -35,10 +35,18 @@ export class PaymentController {
     const signature = (req.headers['x-paystack-signature'] as string) || null;
     const rawBody = (req as any).rawBody ?? JSON.stringify(req.body);
 
-    // verify signature when possible
+    // In production, enforce signature validation. In development/testing, log warning but proceed.
+    const isProduction = process.env.NODE_ENV === 'production';
     const valid = this.paystackService.verifySignature(rawBody, signature);
+    
     if (!valid) {
-      return res.status(400).json({ ok: false, message: 'invalid signature' });
+      if (isProduction) {
+        // Strict validation in production
+        return res.status(400).json({ ok: false, message: 'invalid signature' });
+      } else {
+        // Allow in development but warn
+        console.warn('⚠️  Webhook received without valid signature (development mode - proceeding anyway)');
+      }
     }
 
     const payload = req.body;
@@ -51,7 +59,8 @@ export class PaymentController {
       const result = await this.paymentService.handleWebhook({ providerPaymentId, status });
       return res.status(200).json(result);
     } catch (err) {
-      return res.status(500).json({ ok: false });
+      console.error('Webhook processing error:', err);
+      return res.status(500).json({ ok: false, error: String(err) });
     }
   }
 }

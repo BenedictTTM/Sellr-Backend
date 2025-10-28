@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import { json } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -8,6 +9,16 @@ async function bootstrap() {
   
   // Enable cookie parser middleware
   app.use(cookieParser());
+
+  // Raw body parser for webhook signature verification
+  // This stores the raw body on req.rawBody for routes that need it (like webhooks)
+  app.use(
+    json({
+      verify: (req: any, res, buf) => {
+        req.rawBody = buf.toString('utf8');
+      },
+    }),
+  );
   
   // Enable CORS for frontend connection
   const allowedOrigins = [
