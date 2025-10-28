@@ -36,6 +36,17 @@ export class PaymentService {
       }
       this.logger.log(`createPayment start: user=${userId} amount=${amount} currency=${currency} meta=${metaPreview}`);
 
+      // Validate inputs
+      if (!userId || typeof userId !== 'number' || userId <= 0) {
+        this.logger.error(`Invalid userId in createPayment: ${userId} (type: ${typeof userId})`);
+        return { success: false, error: `Invalid userId: ${userId}` };
+      }
+
+      if (!amount || typeof amount !== 'number' || amount <= 0) {
+        this.logger.error(`Invalid amount in createPayment: ${amount} (type: ${typeof amount})`);
+        return { success: false, error: `Invalid amount: ${amount}` };
+      }
+
       const createData: any = {
         userId,
         amount,

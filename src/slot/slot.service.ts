@@ -13,7 +13,16 @@ export class SlotService {
    * The frontend should redirect the user to the provided authorization_url.
    */
   async purchaseSlots(userId: number, slots: number) {
-    if (slots <= 0) throw new BadRequestException('slots must be a positive integer');
+    // Enhanced validation with better error messages
+    if (!userId || typeof userId !== 'number' || userId <= 0) {
+      this.logger.error(`Invalid userId: ${userId} (type: ${typeof userId})`);
+      throw new BadRequestException(`Invalid userId: must be a positive number, received: ${userId}`);
+    }
+    
+    if (!slots || typeof slots !== 'number' || slots <= 0) {
+      this.logger.error(`Invalid slots: ${slots} (type: ${typeof slots})`);
+      throw new BadRequestException(`Invalid slots: must be a positive number, received: ${slots}`);
+    }
 
     this.logger.log(`purchaseSlots start: user=${userId} slots=${slots}`);
 
@@ -27,6 +36,7 @@ export class SlotService {
         throw new ServiceUnavailableException('Database is unreachable. Please try again later.');
       }
       // Re-throw unexpected errors to be handled by global exception handler
+      this.logger.error(`Unexpected database error: ${err?.message}`, err);
       throw err;
     }
 
@@ -46,7 +56,7 @@ export class SlotService {
 
     if (!result.success) {
       this.logger.error(`Failed to create slot purchase payment for user ${userId}: ${result.error}`);
-      throw new BadRequestException('Failed to create payment');
+      throw new BadRequestException(`Failed to create payment: ${result.error || 'Unknown error'}`);
     }
 
     // IMPORTANT: do NOT credit slots here. We should only credit after the payment
