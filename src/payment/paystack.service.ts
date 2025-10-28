@@ -11,6 +11,18 @@ export class PaystackService {
    * amount should be in the main currency units (e.g. GHS). We'll convert to smallest unit by *100.
    */
   async initializeTransaction(email: string, amount: number, reference: string, callbackUrl?: string) {
+    // Validate that secret key exists
+    if (!this.secret || this.secret.trim() === '') {
+      this.logger.error('PAYSTACK_SECRET_KEY is not set or empty. Check environment variables.');
+      throw new Error('Payment provider not configured. Please contact support.');
+    }
+
+    // Validate secret key format (should start with sk_test_ or sk_live_)
+    if (!this.secret.startsWith('sk_test_') && !this.secret.startsWith('sk_live_')) {
+      this.logger.error(`Invalid PAYSTACK_SECRET_KEY format: ${this.secret.substring(0, 10)}...`);
+      throw new Error('Payment provider misconfigured. Please contact support.');
+    }
+
     const url = `${this.baseUrl}/transaction/initialize`;
     const body = {
       email,
@@ -18,6 +30,8 @@ export class PaystackService {
       reference,
       callback_url: callbackUrl ?? process.env.PAYSTACK_CALLBACK_URL,
     };
+
+    this.logger.log(`Initializing Paystack transaction: email=${email} amount=${amount} ref=${reference}`);
 
     const res = await fetch(url, {
       method: 'POST',
@@ -30,15 +44,21 @@ export class PaystackService {
 
     const data = await res.json();
     if (!res.ok) {
-      this.logger.error('Paystack initialize failed', data);
+      this.logger.error(`Paystack initialize failed (${res.status}):`, data);
       throw new Error(data?.message || 'Paystack initialization failed');
     }
 
+    this.logger.log(`Paystack transaction initialized successfully: ref=${reference}`);
     // returns { authorization_url, access_code, reference }
     return data.data;
   }
 
   async verifyTransaction(reference: string) {
+    if (!this.secret || this.secret.trim() === '') {
+      this.logger.error('PAYSTACK_SECRET_KEY is not set. Cannot verify transaction.');
+      throw new Error('Payment provider not configured.');
+    }
+
     const url = `${this.baseUrl}/transaction/verify/${encodeURIComponent(reference)}`;
     const res = await fetch(url, {
       method: 'GET',
@@ -46,7 +66,7 @@ export class PaystackService {
     });
     const data = await res.json();
     if (!res.ok) {
-      this.logger.error('Paystack verify failed', data);
+      this.logger.error(`Paystack verify failed (${res.status}):`, data);
       throw new Error(data?.message || 'Paystack verify failed');
     }
     return data.data;
