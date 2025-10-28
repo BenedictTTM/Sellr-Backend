@@ -68,6 +68,9 @@ export class AuthGuard implements CanActivate {
           firstName: true,
           lastName: true,
           premiumTier: true,
+          availableSlots: true,
+          usedSlots: true,
+          createdAt: true,
         },
       });
 
