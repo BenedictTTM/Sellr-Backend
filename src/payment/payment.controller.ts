@@ -44,12 +44,15 @@ export class PaymentController {
     try {
       this.logger.log(`Webhook received: ${JSON.stringify({ 
         hasSignature: !!signature, 
-        payloadKeys: Object.keys(payload) 
+        payloadKeys: Object.keys(payload),
+        nodeEnv: process.env.NODE_ENV || 'undefined'
       })}`);
 
       // Signature validation
       const isProduction = process.env.NODE_ENV === 'production';
       const valid = this.paystackService.verifySignature(rawBody, signature);
+      
+      this.logger.log(`Signature validation: valid=${valid}, isProduction=${isProduction}`);
       
       if (!valid) {
         this.logger.warn('Webhook signature validation failed');
@@ -58,6 +61,7 @@ export class PaymentController {
           return res.status(400).json({ ok: false, message: 'invalid signature' });
         } else {
           this.logger.warn('⚠️  Webhook received without valid signature (development mode - proceeding anyway)');
+          // Continue processing in development mode
         }
       }
 
@@ -66,6 +70,8 @@ export class PaymentController {
       const providerPaymentId = data?.reference ?? data?.id ?? null;
       const status = data?.status ?? payload?.status ?? 'unknown';
 
+      this.logger.log(`Processing webhook: reference=${providerPaymentId}, status=${status}`);
+
       if (!providerPaymentId) {
         this.logger.warn('Webhook missing payment reference');
         return res.status(400).json({ ok: false, message: 'missing payment reference' });
@@ -73,7 +79,7 @@ export class PaymentController {
 
       const result = await this.paymentService.handleWebhook({ providerPaymentId, status });
       
-      this.logger.log(`Webhook processed successfully: paymentRef=${providerPaymentId} status=${status}`);
+      this.logger.log(`Webhook processed successfully: paymentRef=${providerPaymentId} status=${status} result=${JSON.stringify(result)}`);
       return res.status(200).json(result);
 
     } catch (err) {
