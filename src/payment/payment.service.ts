@@ -75,8 +75,13 @@ export class PaymentService {
 
         try {
           const reference = `payment-${created.id}-${Date.now()}`;
-          this.logger.log(`Initializing Paystack transaction: paymentId=${created.id} reference=${reference} email=${email} amount=${amount}`);
-          const init = await this.paystackService.initializeTransaction(email, amount, reference);
+          
+          // Construct callback URL - use frontend URL for redirect after payment
+          const frontendUrl = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
+          const callbackUrl = `${frontendUrl}/payment-success`;
+          
+          this.logger.log(`Initializing Paystack transaction: paymentId=${created.id} reference=${reference} email=${email} amount=${amount} callback=${callbackUrl}`);
+          const init = await this.paystackService.initializeTransaction(email, amount, reference, callbackUrl);
 
           // store providerPaymentId on the record (reference)
           await this.prisma.payment.update({

@@ -32,6 +32,44 @@ export class PaymentController {
     return this.paymentService.getPaymentById(paymentId);
   }
 
+  /**
+   * Verify a payment by reference
+   * This endpoint can be called by the frontend after Paystack redirect
+   */
+  @Post('verify')
+  async verifyPayment(@Body() body: { reference: string }) {
+    const { reference } = body;
+    
+    if (!reference) {
+      return { success: false, error: 'Payment reference is required' };
+    }
+
+    try {
+      // Verify with Paystack
+      const verification = await this.paystackService.verifyTransaction(reference);
+      
+      // Update our database via webhook handler
+      await this.paymentService.handleWebhook({
+        providerPaymentId: reference,
+        status: verification.status,
+        data: verification,
+      });
+
+      return {
+        success: true,
+        status: verification.status,
+        amount: verification.amount / 100, // Convert from kobo/pesewas to main currency
+        reference: verification.reference,
+      };
+    } catch (error) {
+      this.logger.error('Payment verification failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Verification failed',
+      };
+    }
+  }
+
 
   // Enhanced webhook endpoint with proper monitoring
   @Post('webhook')
