@@ -17,11 +17,16 @@ export class CookieService {
 
   setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
     const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
+    const isLocalhost = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+    
     const accessTokenMaxAge = parseInt(this.configService.get('JWT_EXPIRES_IN_MS', '1500000'));
     const refreshTokenMaxAge = parseInt(this.configService.get('JWT_REFRESH_EXPIRES_IN_MS', '604800000'));
     
     this.logger.log('🍪 [COOKIE] Setting authentication cookies', {
       isProduction,
+      isLocalhost,
+      frontendUrl,
       accessTokenMaxAge,
       refreshTokenMaxAge,
       accessTokenLength: accessToken?.length,
@@ -29,13 +34,13 @@ export class CookieService {
       nodeEnv: this.configService.get('NODE_ENV'),
     });
     
-    // For cross-origin (Vercel frontend + Render backend), we need:
-    // - SameSite: 'none' (allows cross-origin cookies)
-    // - Secure: true (required when SameSite=none)
+    // Cookie settings based on environment:
+    // - Localhost: SameSite=lax, Secure=false (HTTP works)
+    // - Production: SameSite=none, Secure=true (HTTPS required for cross-origin)
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always true for production cross-origin
-      sameSite: 'none' as const, // Changed from 'lax' to 'none' for cross-origin
+      secure: !isLocalhost, // false for localhost, true for production
+      sameSite: isLocalhost ? ('lax' as const) : ('none' as const),
       path: '/',
     };
     
@@ -60,11 +65,14 @@ export class CookieService {
   clearAuthCookies(res: Response): void {
     this.logger.log('🧹 [COOKIE] Clearing authentication cookies');
     
+    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
+    const isLocalhost = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+    
     const cookieOptions = {
       httpOnly: true,
       path: '/',
-      secure: true,
-      sameSite: 'none' as const, // Match the setting used when creating cookies
+      secure: !isLocalhost,
+      sameSite: isLocalhost ? ('lax' as const) : ('none' as const),
     };
 
     res.clearCookie('access_token', cookieOptions);

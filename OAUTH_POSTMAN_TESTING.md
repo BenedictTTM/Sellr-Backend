@@ -16,6 +16,7 @@ Complete guide for testing Google OAuth authentication using Postman.
 ### 2. Set Environment Variables
 
 In the collection variables:
+
 - `BASE_URL`: `http://localhost:3001` (for local testing)
 - `PRODUCTION_URL`: `https://sellr-backend-1.onrender.com` (for production)
 
@@ -30,6 +31,7 @@ In the collection variables:
 This simulates the entire OAuth flow without requiring Google authentication.
 
 **Request:**
+
 ```json
 POST http://localhost:3001/auth/oauth/test
 Content-Type: application/json
@@ -43,6 +45,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -70,6 +73,7 @@ Content-Type: application/json
 ```
 
 **What happens:**
+
 1. ✅ User is created if new, or found if exists
 2. ✅ JWT tokens are generated
 3. ✅ Cookies are set (check Postman's Cookies tab)
@@ -105,6 +109,7 @@ Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Scenario 3: Test User Creation
 
 **First Request (New User):**
+
 ```json
 POST /auth/oauth/test
 {
@@ -115,11 +120,13 @@ POST /auth/oauth/test
 ```
 
 **Check Response:**
+
 - User object should have a new `id`
 - `availableSlots` should be `5` (default for FREE tier)
 - `usedSlots` should be `0`
 
 **Second Request (Existing User):**
+
 ```json
 POST /auth/oauth/test
 {
@@ -130,6 +137,7 @@ POST /auth/oauth/test
 ```
 
 **Check Response:**
+
 - Same `id` as before (user found, not created)
 - `firstName` and `lastName` updated
 - Slots remain the same
@@ -151,6 +159,7 @@ POST /auth/oauth/test
 ```
 
 **Verify:**
+
 - User's name is updated
 - Profile picture is updated
 - Other data (slots, role) remains unchanged
@@ -171,6 +180,7 @@ POST /auth/oauth/test
 ### View Cookie Details
 
 Click on a cookie to see:
+
 ```
 Name: access_token
 Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -185,14 +195,17 @@ SameSite: None
 ### Common Issues
 
 **Issue: "No access token found"**
+
 - **Cause:** Cookies not being sent
 - **Fix:** Check Postman's cookie settings, enable "Automatically follow redirects"
 
 **Issue: "401 Unauthorized"**
+
 - **Cause:** Token expired or invalid
 - **Fix:** Generate new tokens using test endpoint
 
 **Issue: "User already exists"**
+
 - **This is normal!** OAuth finds existing users by email
 - **Fix:** Use a different email to create a new user
 
@@ -200,13 +213,13 @@ SameSite: None
 
 ## 📊 Response Status Codes
 
-| Code | Meaning | Action |
-|------|---------|--------|
-| 200 | Success | OAuth login worked |
-| 201 | Created | New user created |
-| 401 | Unauthorized | Invalid/missing token |
-| 409 | Conflict | Email already exists with different provider |
-| 500 | Server Error | Check backend logs |
+| Code | Meaning      | Action                                       |
+| ---- | ------------ | -------------------------------------------- |
+| 200  | Success      | OAuth login worked                           |
+| 201  | Created      | New user created                             |
+| 401  | Unauthorized | Invalid/missing token                        |
+| 409  | Conflict     | Email already exists with different provider |
+| 500  | Server Error | Check backend logs                           |
 
 ---
 
@@ -215,6 +228,7 @@ SameSite: None
 ### Switch to Production URL
 
 Change collection variable:
+
 ```
 BASE_URL = https://sellr-backend-1.onrender.com
 ```
@@ -235,6 +249,7 @@ Content-Type: application/json
 ### Verify Production Cookies
 
 Check that cookies have:
+
 - `Secure: true`
 - `SameSite: None`
 - Domain: `sellr-backend-1.onrender.com`
@@ -248,6 +263,7 @@ Check that cookies have:
 The `/auth/oauth/test` endpoint should be **disabled in production** or protected with an API key.
 
 **Option 1: Environment Check**
+
 ```typescript
 @Post('test')
 async testOAuthLogin(...) {
@@ -259,6 +275,7 @@ async testOAuthLogin(...) {
 ```
 
 **Option 2: API Key Protection**
+
 ```typescript
 @Post('test')
 @UseGuards(ApiKeyGuard)
@@ -275,26 +292,31 @@ Comment out the test endpoint before deploying to production.
 ## 📝 Sample Test Cases
 
 ### Test Case 1: New User Registration
+
 - **Input:** New email
 - **Expected:** User created, tokens generated, slots = 5
 - **Verify:** Database has new user record
 
 ### Test Case 2: Existing User Login
+
 - **Input:** Existing email
 - **Expected:** User found, tokens generated, data updated
 - **Verify:** User count doesn't increase
 
 ### Test Case 3: Profile Update
+
 - **Input:** Existing email with different name
 - **Expected:** Name updated, same user ID
 - **Verify:** Profile changes saved to database
 
 ### Test Case 4: Token Generation
+
 - **Input:** Any valid email
 - **Expected:** Valid JWT tokens in response and cookies
 - **Verify:** Tokens can decode with jwt.io
 
 ### Test Case 5: Cookie Configuration
+
 - **Input:** Test OAuth request
 - **Expected:** Cookies with correct security flags
 - **Verify:** HttpOnly=true, Secure=true, SameSite=none
@@ -312,7 +334,7 @@ POST /auth/oauth/test
 // Username: "user1"
 
 // Second request with same base username
-POST /auth/oauth/test  
+POST /auth/oauth/test
 { "email": "user1@yahoo.com" }
 // Username: "user1" + random number
 ```
