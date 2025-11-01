@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "Sellr - Google OAuth Testing",
+    "description": "Postman collection for testing Google OAuth endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "OAuth Test Endpoints",
+      "item": [
+        {
+          "name": "1. Test OAuth Login (Simulated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@gmail.com\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"profilePic\": \"https://via.placeholder.com/150\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/oauth/test",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "oauth", "test"]
+            },
+            "description": "Simulates OAuth login without requiring Google authentication. Perfect for testing the OAuth flow in Postman.\n\n**What it does:**\n- Creates or finds user by email\n- Generates JWT tokens\n- Sets HTTP-only cookies\n- Returns user data and tokens\n\n**Response includes:**\n- User object\n- access_token (JWT)\n- refresh_token (JWT)\n- Remaining slots\n- Cookie info"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Initiate Google OAuth (Browser Only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/oauth/google",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "oauth", "google"]
+            },
+            "description": "⚠️ **This endpoint requires a browser!**\n\nIt redirects to Google's OAuth consent screen. You cannot test this in Postman directly.\n\n**To test:**\n1. Copy the URL\n2. Paste in browser\n3. Complete Google OAuth flow\n4. Watch the redirect to frontend\n\n**Use the 'Test OAuth Login' endpoint instead for Postman testing.**"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Current User (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "access_token={{ACCESS_TOKEN}}",
+                "description": "Copy access_token from OAuth test response"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/users/me",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Tests if authentication cookies work.\n\n**Steps:**\n1. First, call 'Test OAuth Login'\n2. Copy the access_token from response\n3. Set it in the Cookie header\n4. Send this request\n\n**Expected:** User profile data"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Test Protected Route (Products)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "access_token={{ACCESS_TOKEN}}",
+                "description": "Copy access_token from OAuth test response"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/products",
+              "host": ["{{BASE_URL}}"],
+              "path": ["products"]
+            },
+            "description": "Tests if OAuth authentication works with protected routes.\n\n**Steps:**\n1. First, call 'Test OAuth Login'\n2. Copy the access_token from response\n3. Set it in the Cookie header\n4. Send this request\n\n**Expected:** List of products"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Debugging",
+      "item": [
+        {
+          "name": "Check Backend Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/",
+              "host": ["{{BASE_URL}}"],
+              "path": [""]
+            },
+            "description": "Checks if backend is running and accessible."
+          },
+          "response": []
+        },
+        {
+          "name": "Test CORS",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "https://sellr-front-end.vercel.app"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "POST"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/oauth/test",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "oauth", "test"]
+            },
+            "description": "Tests CORS configuration for cross-origin requests."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "PRODUCTION_URL",
+      "value": "https://sellr-backend-1.onrender.com",
+      "type": "string"
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

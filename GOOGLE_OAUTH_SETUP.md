@@ -44,19 +44,23 @@ src/auth/
 ### Step 1: Configure Google Cloud Console
 
 1. **Go to Google Cloud Console**
+
    - Navigate to: https://console.cloud.google.com/
 
 2. **Create a New Project** (or select existing)
+
    - Click "Select a project" → "New Project"
    - Name: `Sellr-Production` or similar
    - Click "Create"
 
 3. **Enable Google+ API**
+
    - Go to "APIs & Services" → "Library"
    - Search for "Google+ API"
    - Click "Enable"
 
 4. **Configure OAuth Consent Screen**
+
    - Go to "APIs & Services" → "OAuth consent screen"
    - Select "External" (or Internal if G Workspace)
    - Fill in required fields:
@@ -92,6 +96,7 @@ src/auth/
 1. **Open your `.env` file** in Backend folder
 
 2. **Add Google OAuth credentials**:
+
 ```bash
 # Google OAuth 2.0
 GOOGLE_CLIENT_ID="YOUR_CLIENT_ID_HERE.apps.googleusercontent.com"
@@ -106,6 +111,7 @@ JWT_REFRESH_EXPIRES_IN_MS="604800000"
 ```
 
 3. **Verify other required variables**:
+
 ```bash
 DATABASE_URL="postgresql://..."
 FRONTEND_URL="http://localhost:3000"
@@ -129,6 +135,7 @@ npm run start:dev
 ```
 
 You should see:
+
 ```
 🚀 Application is running on port 3001
 ✅ Google OAuth Strategy initialized
@@ -137,6 +144,7 @@ You should see:
 ## 🔌 API Endpoints
 
 ### 1. **Initiate Google Login**
+
 ```http
 GET /auth/oauth/google
 ```
@@ -144,6 +152,7 @@ GET /auth/oauth/google
 **Description**: Redirects user to Google OAuth consent screen
 
 **Flow**:
+
 1. User clicks "Login with Google" button
 2. Frontend redirects to this endpoint
 3. Backend redirects to Google OAuth
@@ -151,6 +160,7 @@ GET /auth/oauth/google
 5. Google redirects back to callback URL
 
 **Frontend Implementation**:
+
 ```typescript
 // React/Next.js
 <a href="http://localhost:3001/auth/oauth/google">
@@ -164,6 +174,7 @@ const handleGoogleLogin = () => {
 ```
 
 ### 2. **OAuth Callback** (Handled automatically)
+
 ```http
 GET /auth/oauth/google/callback
 ```
@@ -171,30 +182,36 @@ GET /auth/oauth/google/callback
 **Description**: Processes Google OAuth callback
 
 **Success Response**:
+
 - Sets HTTP-only cookies: `access_token`, `refresh_token`
 - Redirects to: `http://localhost:3000/dashboard?oauth=success`
 
 **Error Response**:
+
 - Redirects to: `http://localhost:3000/auth/error?message=...`
 
 ## 🔒 Security Features
 
 ### 1. **CSRF Protection**
+
 - State parameter validation
 - SameSite cookie attribute
 - Origin validation
 
 ### 2. **Secure Token Storage**
+
 - HTTP-only cookies (not accessible via JavaScript)
 - Secure flag in production
 - Token rotation on refresh
 
 ### 3. **Data Privacy**
+
 - Minimal scope request (email + profile only)
 - Secure password generation for OAuth accounts
 - Profile data synchronization
 
 ### 4. **Account Security**
+
 - Existing account linking (same email)
 - Soft-delete validation
 - Unique username generation
@@ -241,6 +258,7 @@ sequenceDiagram
 ### Manual Testing
 
 1. **Test OAuth Initiation**
+
 ```bash
 # In browser, navigate to:
 http://localhost:3001/auth/oauth/google
@@ -249,16 +267,19 @@ http://localhost:3001/auth/oauth/google
 Expected: Redirects to Google OAuth consent screen
 
 2. **Test Complete Flow**
+
 - Click "Login with Google"
 - Select Google account
 - Authorize the app
 - Should redirect to dashboard
 
 3. **Verify Cookies Set**
+
 - Open browser DevTools → Application → Cookies
 - Should see: `access_token` and `refresh_token`
 
 4. **Test Protected Endpoints**
+
 ```bash
 # Get current user (should work with cookies)
 curl -X GET http://localhost:3001/auth/me \
@@ -268,11 +289,13 @@ curl -X GET http://localhost:3001/auth/me \
 ### Test with Postman
 
 1. **Import OAuth Flow**
+
    - Create new request
    - GET `http://localhost:3001/auth/oauth/google`
    - Follow redirects manually
 
 2. **Test User Creation**
+
    - Use different Google accounts
    - Verify users created in database
 
@@ -286,6 +309,7 @@ curl -X GET http://localhost:3001/auth/me \
 The implementation uses your existing `User` model. No migration needed!
 
 **Fields used**:
+
 ```prisma
 model User {
   id            Int       @id @default(autoincrement())
@@ -334,9 +358,9 @@ import { FcGoogle } from 'react-icons/fc';
 
 export const GoogleLoginButton = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   return (
-    <a 
+    <a
       href={`${apiUrl}/auth/oauth/google`}
       className="flex items-center gap-2 px-4 py-2 border rounded-lg"
     >
@@ -397,7 +421,8 @@ export default function AuthErrorPage() {
 
 ### Issue: "Redirect URI Mismatch"
 
-**Solution**: 
+**Solution**:
+
 - Verify callback URL in Google Cloud Console matches exactly
 - Check for trailing slashes
 - Ensure protocol (http/https) matches
@@ -405,6 +430,7 @@ export default function AuthErrorPage() {
 ### Issue: "Google Strategy not found"
 
 **Solution**:
+
 ```bash
 # Reinstall dependencies
 npm install passport-google-oauth20 @types/passport-google-oauth20
@@ -413,6 +439,7 @@ npm install passport-google-oauth20 @types/passport-google-oauth20
 ### Issue: "User email not provided"
 
 **Solution**:
+
 - Verify scopes include `email`
 - Check Google account has verified email
 - Ensure OAuth consent screen is configured
@@ -420,6 +447,7 @@ npm install passport-google-oauth20 @types/passport-google-oauth20
 ### Issue: "CORS Error"
 
 **Solution**:
+
 ```typescript
 // main.ts - Verify CORS configuration
 app.enableCors({
@@ -443,6 +471,7 @@ The implementation includes comprehensive logging:
 ```
 
 Monitor these logs for:
+
 - Authentication success/failure rates
 - User creation vs. login rates
 - Error patterns
@@ -468,6 +497,7 @@ NODE_ENV="production"
 ### 3. Enable Security Features
 
 All security features are already implemented:
+
 - ✅ HTTP-only cookies
 - ✅ Secure flag in production
 - ✅ SameSite=Strict
@@ -477,6 +507,7 @@ All security features are already implemented:
 ### 4. Performance Optimization
 
 Consider adding:
+
 - Rate limiting (e.g., express-rate-limit)
 - Redis for session storage
 - CDN for static assets
@@ -506,6 +537,7 @@ Consider adding:
 ## 🎓 Code Quality
 
 This implementation follows:
+
 - ✅ SOLID Principles
 - ✅ Clean Architecture
 - ✅ Enterprise Design Patterns

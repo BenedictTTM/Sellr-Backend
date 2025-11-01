@@ -46,13 +46,15 @@ Look for: `✅ Google OAuth Strategy initialized`
 ### Step 4: Test OAuth Flow
 
 Open your browser to:
+
 ```
 http://localhost:3001/auth/oauth/google
 ```
 
 You should:
+
 1. ✅ Redirect to Google login
-2. ✅ Select/login to Google account  
+2. ✅ Select/login to Google account
 3. ✅ Authorize the app
 4. ✅ Redirect back to `http://localhost:3000/dashboard?oauth=success`
 5. ✅ Cookies set: `access_token` and `refresh_token`
@@ -60,6 +62,7 @@ You should:
 ## 🔍 Quick Verification
 
 ### Check Cookies (Browser DevTools)
+
 ```
 Application → Cookies → http://localhost:3000
 - access_token (HttpOnly)
@@ -67,6 +70,7 @@ Application → Cookies → http://localhost:3000
 ```
 
 ### Test Authenticated Request
+
 ```bash
 # Windows PowerShell
 $cookie = "access_token=YOUR_TOKEN_HERE"
@@ -74,6 +78,7 @@ Invoke-WebRequest -Uri "http://localhost:3001/auth/me" -Headers @{"Cookie"=$cook
 ```
 
 ### Check Database
+
 ```sql
 SELECT id, email, username, "firstName", "lastName", "profilePic"
 FROM "User"
@@ -88,35 +93,39 @@ WHERE email = 'your-google-email@gmail.com';
 ✅ `src/auth/guards/google-oauth.guard.ts` - Route protection  
 ✅ `src/auth/dto/oauth-user.dto.ts` - Data validation  
 ✅ `auth.module.ts` - Updated with OAuth providers  
-✅ `.env.example` - Updated with OAuth config  
+✅ `.env.example` - Updated with OAuth config
 
 ## 🎯 API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/auth/oauth/google` | Initiate OAuth flow |
-| GET | `/auth/oauth/google/callback` | OAuth callback (auto) |
-| GET | `/auth/me` | Get current user (with cookies) |
-| POST | `/auth/refresh` | Refresh tokens |
-| POST | `/auth/logout` | Logout |
+| Method | Endpoint                      | Description                     |
+| ------ | ----------------------------- | ------------------------------- |
+| GET    | `/auth/oauth/google`          | Initiate OAuth flow             |
+| GET    | `/auth/oauth/google/callback` | OAuth callback (auto)           |
+| GET    | `/auth/me`                    | Get current user (with cookies) |
+| POST   | `/auth/refresh`               | Refresh tokens                  |
+| POST   | `/auth/logout`                | Logout                          |
 
 ## 🔧 Troubleshooting
 
 ### "Redirect URI mismatch"
+
 - Check Google Console → Credentials → Authorized redirect URIs
 - Must exactly match: `http://localhost:3001/auth/oauth/google/callback`
 
 ### "Strategy not found"
+
 - Restart NestJS server
 - Check logs for: `✅ Google OAuth Strategy initialized`
 
 ### "CORS error"
+
 - Check `main.ts` CORS configuration
 - Frontend URL must be in allowed origins
 
 ## 📖 Full Documentation
 
 See `GOOGLE_OAUTH_SETUP.md` for complete documentation including:
+
 - Architecture details
 - Security features
 - Production deployment
@@ -134,11 +143,7 @@ export function GoogleLoginButton() {
     window.location.href = 'http://localhost:3001/auth/oauth/google';
   };
 
-  return (
-    <button onClick={handleLogin}>
-      🔐 Login with Google
-    </button>
-  );
+  return <button onClick={handleLogin}>🔐 Login with Google</button>;
 }
 ```
 

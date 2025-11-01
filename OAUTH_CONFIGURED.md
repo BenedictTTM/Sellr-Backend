@@ -43,12 +43,14 @@ https://your-backend.onrender.com
 ### 2. 🚀 Test Locally
 
 **Start your backend:**
+
 ```powershell
 cd Backend
 npm run start:dev
 ```
 
 **Look for this in logs:**
+
 ```
 ✅ Google OAuth Strategy initialized
 🚀 Application is running on port 3001
@@ -57,11 +59,13 @@ npm run start:dev
 **Test the OAuth flow:**
 
 Open in browser:
+
 ```
 http://localhost:3001/auth/oauth/google
 ```
 
 Expected flow:
+
 1. ✅ Redirects to Google login
 2. ✅ You select/authorize Google account
 3. ✅ Redirects back to your app
@@ -71,16 +75,19 @@ Expected flow:
 ### 3. 🔍 Verify It Works
 
 **Check browser cookies:**
+
 - Open DevTools → Application → Cookies
 - Should see: `access_token` and `refresh_token`
 
 **Test authenticated endpoint:**
+
 ```powershell
 # Get current user (PowerShell)
 Invoke-WebRequest -Uri "http://localhost:3001/auth/me" -Method GET -WebSession $session
 ```
 
 **Check database:**
+
 ```sql
 SELECT id, email, username, "firstName", "lastName", "profilePic"
 FROM "User"
@@ -97,13 +104,13 @@ export function GoogleLoginButton() {
   const handleGoogleLogin = () => {
     // For local development:
     window.location.href = 'http://localhost:3001/auth/oauth/google';
-    
+
     // For production:
     // window.location.href = 'https://your-backend.onrender.com/auth/oauth/google';
   };
 
   return (
-    <button 
+    <button
       onClick={handleGoogleLogin}
       className="flex items-center gap-2 px-6 py-3 border rounded-lg hover:bg-gray-50"
     >
@@ -126,7 +133,7 @@ import { useEffect } from 'react';
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
     if (searchParams.get('oauth') === 'success') {
       // Show success message
@@ -143,8 +150,9 @@ export default function Dashboard() {
 ### 5. 🔧 Common Issues & Solutions
 
 **Issue: "Redirect URI mismatch"**
+
 ```
-Solution: 
+Solution:
 - Go to Google Cloud Console
 - Credentials → Your OAuth Client
 - Make sure redirect URI EXACTLY matches:
@@ -154,6 +162,7 @@ Solution:
 ```
 
 **Issue: "Access blocked: This app's request is invalid"**
+
 ```
 Solution:
 - Configure OAuth Consent Screen
@@ -162,6 +171,7 @@ Solution:
 ```
 
 **Issue: "Strategy not initialized"**
+
 ```
 Solution:
 - Restart NestJS server
@@ -170,6 +180,7 @@ Solution:
 ```
 
 **Issue: "CORS error"**
+
 ```
 Solution:
 - Check main.ts CORS configuration
@@ -184,6 +195,7 @@ When deploying to production:
 ### Backend (Render/Railway/etc.)
 
 1. **Add environment variables** to your hosting platform:
+
    ```
    GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
@@ -192,6 +204,7 @@ When deploying to production:
    ```
 
 2. **Update Google Cloud Console:**
+
    - Add production redirect URI
    - Add production JavaScript origins
    - Switch OAuth consent screen to "Production" (optional)
@@ -204,8 +217,10 @@ When deploying to production:
 ### Frontend (Vercel)
 
 1. **Update OAuth button URL:**
+
    ```tsx
-   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-backend.onrender.com';
+   const API_URL =
+     process.env.NEXT_PUBLIC_API_URL || 'https://your-backend.onrender.com';
    window.location.href = `${API_URL}/auth/oauth/google`;
    ```
 
@@ -216,14 +231,14 @@ When deploying to production:
 
 ## 📊 API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/auth/oauth/google` | GET | Initiate Google OAuth |
-| `/auth/oauth/google/callback` | GET | OAuth callback (automatic) |
-| `/auth/me` | GET | Get current user |
-| `/auth/verify` | GET | Verify token |
-| `/auth/refresh` | POST | Refresh tokens |
-| `/auth/logout` | POST | Logout |
+| Endpoint                      | Method | Description                |
+| ----------------------------- | ------ | -------------------------- |
+| `/auth/oauth/google`          | GET    | Initiate Google OAuth      |
+| `/auth/oauth/google/callback` | GET    | OAuth callback (automatic) |
+| `/auth/me`                    | GET    | Get current user           |
+| `/auth/verify`                | GET    | Verify token               |
+| `/auth/refresh`               | POST   | Refresh tokens             |
+| `/auth/logout`                | POST   | Logout                     |
 
 ## 📚 Documentation
 

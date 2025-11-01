@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { GoogleOAuthGuard } from '../guards/google-oauth.guard';
 import { OAuthService } from '../services/oauth.service';
@@ -207,5 +207,99 @@ export class OAuthController {
       error: errorMessage,
       message: 'Please try again or use a different authentication method',
     };
+  }
+
+  /**
+   * TEST ENDPOINT: Simulate OAuth Login (POSTMAN/API TESTING ONLY)
+   * 
+   * This endpoint simulates the OAuth flow for testing purposes.
+   * It bypasses Google OAuth and directly creates/authenticates a user.
+   * 
+   * ⚠️ WARNING: This should be DISABLED in production or protected by API key!
+   * 
+   * @route POST /auth/oauth/test
+   * @body { email, firstName, lastName, profilePic }
+   * @returns JSON response with user data and tokens
+   * 
+   * @example Postman Request:
+   * POST http://localhost:3001/auth/oauth/test
+   * Content-Type: application/json
+   * 
+   * {
+   *   "email": "test@gmail.com",
+   *   "firstName": "Test",
+   *   "lastName": "User",
+   *   "profilePic": "https://example.com/photo.jpg"
+   * }
+   * 
+   * @example Response:
+   * {
+   *   "success": true,
+   *   "message": "OAuth authentication successful (TEST MODE)",
+   *   "user": { ... },
+   *   "access_token": "eyJhbGc...",
+   *   "refresh_token": "eyJhbGc...",
+   *   "remainingSlots": 5
+   * }
+   */
+  @Post('test')
+  async testOAuthLogin(
+    @Body() testUser: { email: string; firstName?: string; lastName?: string; profilePic?: string },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      this.logger.warn('⚠️ [OAUTH-TEST] Using TEST endpoint - not for production!');
+      
+      // Validate test user data
+      if (!testUser.email) {
+        return {
+          success: false,
+          error: 'Email is required',
+        };
+      }
+
+      // Simulate OAuth user data
+      const oauthUser = {
+        email: testUser.email,
+        firstName: testUser.firstName || 'Test',
+        lastName: testUser.lastName || 'User',
+        profilePic: testUser.profilePic || 'https://via.placeholder.com/150',
+        googleId: `test_${Date.now()}`,
+        provider: 'google_test',
+        isVerified: true,
+      };
+
+      this.logger.log(`🧪 [OAUTH-TEST] Testing OAuth for: ${oauthUser.email}`);
+
+      // Authenticate or create user (same logic as real OAuth)
+      const result = await this.oauthService.authenticateOAuthUser(oauthUser);
+
+      // Set cookies (so Postman can capture them)
+      this.cookieService.setAuthCookies(res, result.access_token, result.refresh_token);
+
+      this.logger.log(`✅ [OAUTH-TEST] Test OAuth successful for: ${result.user.email}`);
+
+      // Return JSON response with tokens (Postman-friendly)
+      return {
+        success: true,
+        message: 'OAuth authentication successful (TEST MODE)',
+        user: result.user,
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+        remainingSlots: result.remainingSlots,
+        cookies: {
+          access_token: `Set in HTTP-only cookie (maxAge: ${this.configService.get('JWT_EXPIRES_IN_MS')}ms)`,
+          refresh_token: `Set in HTTP-only cookie (maxAge: ${this.configService.get('JWT_REFRESH_EXPIRES_IN_MS')}ms)`,
+        },
+      };
+    } catch (error) {
+      this.logger.error('❌ [OAUTH-TEST] Test OAuth failed:', error);
+      
+      return {
+        success: false,
+        error: error.message || 'Test OAuth authentication failed',
+        details: error.stack,
+      };
+    }
   }
 }
