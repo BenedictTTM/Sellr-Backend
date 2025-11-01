@@ -114,30 +114,36 @@ export class OAuthController {
   @UseGuards(GoogleOAuthGuard)
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     try {
-      this.logger.log('✅ Google OAuth callback received');
+      this.logger.log('✅ [OAUTH] Google OAuth callback received');
 
       // Extract OAuth user from request (set by Passport strategy)
       const oauthUser = req.user as any;
 
       if (!oauthUser) {
-        this.logger.warn('❌ No user data in OAuth callback');
+        this.logger.warn('❌ [OAUTH] No user data in OAuth callback');
         return res.redirect(`${this.frontendUrl}/auth/oauth-callback?message=Authentication failed`);
       }
 
-      this.logger.debug(`🔍 Processing OAuth user: ${oauthUser.email}`);
+      this.logger.log(`🔍 [OAUTH] Processing OAuth user: ${oauthUser.email}`);
 
       // Authenticate or create user
       const result = await this.oauthService.authenticateOAuthUser(oauthUser);
 
+      this.logger.log('🍪 [OAUTH] Setting authentication cookies');
+      this.logger.log(`🔑 [OAUTH] Access token length: ${result.access_token?.length}`);
+      this.logger.log(`🔑 [OAUTH] Refresh token length: ${result.refresh_token?.length}`);
+
       // Set authentication cookies using CookieService
       this.cookieService.setAuthCookies(res, result.access_token, result.refresh_token);
 
-      this.logger.log(`✅ OAuth authentication successful for: ${result.user.email}`);
+      this.logger.log(`✅ [OAUTH] OAuth authentication successful for: ${result.user.email}`);
+      this.logger.log(`🧭 [OAUTH] Redirecting to: ${this.frontendUrl}/auth/oauth-callback?oauth=success`);
 
       // Redirect to frontend OAuth callback page with success status
       return res.redirect(`${this.frontendUrl}/auth/oauth-callback?oauth=success`);
     } catch (error) {
-      this.logger.error('❌ OAuth callback failed:', error);
+      this.logger.error('❌ [OAUTH] OAuth callback failed:', error);
+      this.logger.error('❌ [OAUTH] Error stack:', error.stack);
 
       // Redirect to frontend OAuth callback with error
       const errorMessage = encodeURIComponent(
